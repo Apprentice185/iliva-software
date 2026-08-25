@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>智能遮阳产品打包测算工具</title>
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --primary-light: #eff6ff;
+      --accent: #3b82f6;
+      --bg: #f1f5f9;
+      --card: #ffffff;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --border-focus: #93c5fd;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --radius-lg: 16px;
+      --radius-md: 10px;
+      --radius-sm: 6px;
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.08), 0 2px 6px -2px rgba(15, 23, 42, 0.04);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text-main);
+      min-height: 100vh;
+      padding: 16px 12px;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+
+    .app-container {
+      width: 100%;
+      max-width: 540px;
+      background: var(--card);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+      border: 1px solid rgba(226, 232, 240, 0.8);
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+
+    /* Header */
+    .app-header {
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      color: #ffffff;
+      padding: 20px 20px 18px;
+      position: relative;
+    }
+    .header-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      padding: 3px 8px;
+      border-radius: 20px;
+      margin-bottom: 8px;
+      color: #93c5fd;
+    }
+    .app-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .app-subtitle {
+      font-size: 0.8rem;
+      color: #94a3b8;
+      margin-top: 4px;
+    }
+
+    /* Form Body */
+    .app-body {
+      padding: 18px 18px 22px;
+    }
+
+    .section-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .section-label::before {
+      content: "";
+      display: inline-block;
+      width: 4px;
+      height: 12px;
+      background: var(--primary);
+      border-radius: 2px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+    }
+
+    .form-group {
+      margin-bottom: 14px;
+      position: relative;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #334155;
+      margin-bottom: 6px;
+    }
+
+    .input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    select, input[type="number"] {
+      width: 100%;
+      height: 42px;
+      padding: 8px 12px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-md);
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: var(--text-main);
+      background-color: #ffffff;
+      outline: none;
+      transition: all 0.2s ease;
+      -moz-appearance: none;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      background-size: 16px;
+      padding-right: 32px;
+      cursor: pointer;
+    }
+
+    select:focus, input[type="number"]:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    }
+
+    .unit-addon {
+      position: absolute;
+      right: 12px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+
+    /* Model specs tag info */
+    .spec-preview-card {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 10px 12px;
+      margin-bottom: 14px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      text-align: center;
+    }
+    .spec-item-title {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      margin-bottom: 2px;
+    }
+    .spec-item-value {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #1e293b;
+    }
+
+    /* Fabric Chips */
+    .chip-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 6px;
+    }
+    .chip {
+      font-size: 0.75rem;
+      padding: 4px 10px;
+      border-radius: 20px;
+      background: #f1f5f9;
+      color: #475569;
+      border: 1px solid #e2e8f0;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.15s;
+    }
+    .chip:hover, .chip.active {
+      background: var(--primary-light);
+      border-color: var(--border-focus);
+      color: var(--primary);
+      font-weight: 600;
+    }
+
+    .zebra-notice {
+      display: none;
+      background: #fffbeb;
+      border: 1px solid #fef3c7;
+      color: #b45309;
+      font-size: 0.75rem;
+      font-weight: 500;
+      padding: 6px 10px;
+      border-radius: var(--radius-sm);
+      margin-top: 8px;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Margin toggle */
+    .accordion-toggle {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      margin-bottom: 14px;
+      user-select: none;
+      font-weight: 600;
+    }
+    .accordion-toggle:hover {
+      color: var(--primary);
+    }
+    .accordion-content {
+      display: none;
+      background: #f8fafc;
+      padding: 12px;
+      border-radius: var(--radius-md);
+      margin-bottom: 14px;
+      border: 1px solid var(--border);
+    }
+
+    /* Result Dashboard */
+    .results-card {
+      background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+      border: 1.5px solid #cbd5e1;
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      margin-top: 8px;
+      position: relative;
+    }
+
+    .results-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .stat-box {
+      background: #ffffff;
+      padding: 12px 14px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+    }
+    .stat-box.highlight {
+      background: #ffffff;
+      border-left: 3.5px solid var(--primary);
+    }
+    .stat-box.highlight-alt {
+      background: #ffffff;
+      border-left: 3.5px solid var(--warning);
+    }
+    .stat-box.full-width {
+      grid-column: span 2;
+    }
+
+    .stat-title {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      margin-bottom: 4px;
+    }
+    .stat-main-num {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: #0f172a;
+      display: flex;
+      align-items: baseline;
+      gap: 3px;
+    }
+    .stat-unit {
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+    .stat-sub {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .weight-breakdown {
+      background: rgba(255, 255, 255, 0.7);
+      border: 1px dashed #cbd5e1;
+      border-radius: var(--radius-sm);
+      padding: 8px 10px;
+      font-size: 0.75rem;
+      color: #475569;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* Actions */
+    .btn-copy {
+      width: 100%;
+      height: 46px;
+      background: var(--primary);
+      color: #ffffff;
+      border: none;
+      border-radius: var(--radius-md);
+      font-size: 0.95rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(37, 99, 235, 0.25);
+      transition: all 0.2s ease;
+      margin-top: 14px;
+    }
+    .btn-copy:hover {
+      background: var(--primary-hover);
+      box-shadow: 0 6px 14px rgba(37, 99, 235, 0.3);
+      transform: translateY(-1px);
+    }
+    .btn-copy:active {
+      transform: translateY(1px);
+    }
+
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: rgba(15, 23, 42, 0.92);
+      backdrop-filter: blur(8px);
+      color: #ffffff;
+      padding: 10px 18px;
+      border-radius: 30px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.18);
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      z-index: 9999;
+      pointer-events: none;
+    }
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+    }
+
+    @media (max-width: 480px) {
+      body { padding: 8px 6px; }
+      .app-container { border-radius: 12px; }
+      .app-header { padding: 16px 14px; }
+      .app-body { padding: 14px; }
+      .spec-preview-card { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+      .grid-3 { grid-template-columns: 1fr; gap: 8px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="app-container">
+  <!-- Header -->
+  <div class="app-header">
+    <div class="header-badge">📦 物流参数测算 v1.4</div>
+    <h1 class="app-title">产品打包尺寸与重量计算器</h1>
+    <div class="app-subtitle">智能遮阳定制产品外箱规格与毛重快速估算</div>
+  </div>
+
+  <!-- Body -->
+  <div class="app-body">
+    <!-- 产品选型 -->
+    <div class="section-label">1. 选择产品机构</div>
+    <div class="grid-2">
+      <div class="form-group">
+        <label for="categorySelect">产品品类</label>
+        <select id="categorySelect" onchange="onCategoryChange()"></select>
+      </div>
+      <div class="form-group">
+        <label for="modelSelect">机构型号</label>
+        <select id="modelSelect" onchange="onModelChange()"></select>
+      </div>
+    </div>
+
+    <!-- 机构参数微型预览卡 -->
+    <div class="spec-preview-card">
+      <div>
+        <div class="spec-item-title">机构深度</div>
+        <div class="spec-item-value" id="specDepth">-</div>
+      </div>
+      <div>
+        <div class="spec-item-title">机构高度</div>
+        <div class="spec-item-value" id="specHeight">-</div>
+      </div>
+      <div>
+        <div class="spec-item-title">型材米重</div>
+        <div class="spec-item-value" id="specProfile">-</div>
+      </div>
+      <div>
+        <div class="spec-item-title">固定配件</div>
+        <div class="spec-item-value" id="specAcc">-</div>
+      </div>
+    </div>
+
+    <!-- 尺寸与面料 -->
+    <div class="section-label">2. 输入制作与包装参数</div>
+    <div class="grid-2">
+      <div class="form-group">
+        <label for="width">制作宽度 (W)</label>
+        <div class="input-wrapper">
+          <input type="number" id="width" value="2.00" step="0.01" min="0.1" max="20" oninput="calculate()">
+          <span class="unit-addon">m</span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="height">制作高度 (H)</label>
+        <div class="input-wrapper">
+          <input type="number" id="height" value="2.50" step="0.01" min="0.1" max="20" oninput="calculate()">
+          <span class="unit-addon">m</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="form-group">
+        <label for="fabricGsm">面料克重</label>
+        <div class="input-wrapper">
+          <input type="number" id="fabricGsm" value="420" step="10" min="0" oninput="calculate()">
+          <span class="unit-addon">g/m²</span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="boxPerMeterWeight">包装箱每米重量</label>
+        <div class="input-wrapper">
+          <input type="number" id="boxPerMeterWeight" value="0.30" step="0.05" min="0" oninput="calculate()">
+          <span class="unit-addon">kg/m</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top: -6px; margin-bottom: 14px;">
+      <div class="chip-group">
+        <span class="chip" onclick="setFabric(280)">280g</span>
+        <span class="chip" onclick="setFabric(360)">360g</span>
+        <span class="chip active" onclick="setFabric(420)">420g</span>
+        <span class="chip" onclick="setFabric(500)">500g</span>
+        <span class="chip" onclick="setFabric(650)">650g</span>
+      </div>
+      <div id="zebraNotice" class="zebra-notice">
+        <span>⚡ 斑马帘为双层面料结构，系统已自动按 2 倍克重计入总重</span>
+      </div>
+    </div>
+
+    <!-- 包装余量调整 (三向独立配置) -->
+    <div class="accordion-toggle" onclick="toggleMarginSetting()">
+      <span id="marginIcon">⚙️</span>
+      <span>外包装放量设置 (可分别微调 长/深/高 余量) ▾</span>
+    </div>
+    <div id="marginBox" class="accordion-content">
+      <div class="grid-3">
+        <div class="form-group" style="margin-bottom:0;">
+          <label for="marginL" style="font-size:0.75rem;">长度余量 (加长)</label>
+          <div class="input-wrapper">
+            <input type="number" id="marginL" value="0.05" step="0.01" min="0" oninput="calculate()" style="height:36px; font-size:0.85rem;">
+            <span class="unit-addon">m</span>
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
+          <label for="marginD" style="font-size:0.75rem;">深度余量 (加深)</label>
+          <div class="input-wrapper">
+            <input type="number" id="marginD" value="0.05" step="0.01" min="0" oninput="calculate()" style="height:36px; font-size:0.85rem;">
+            <span class="unit-addon">m</span>
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
+          <label for="marginH" style="font-size:0.75rem;">高度余量 (加高)</label>
+          <div class="input-wrapper">
+            <input type="number" id="marginH" value="0.05" step="0.01" min="0" oninput="calculate()" style="height:36px; font-size:0.85rem;">
+            <span class="unit-addon">m</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 结果面板 -->
+    <div class="results-card">
+      <div class="results-grid">
+        <!-- 包装外箱尺寸 -->
+        <div class="stat-box highlight full-width">
+          <div class="stat-title">打包外箱尺寸 (长 × 深 × 高)</div>
+          <div class="stat-main-num" id="resDims">-</div>
+          <div class="stat-sub" id="resDimsMm">外箱尺寸 (mm)：-</div>
+        </div>
+        
+        <!-- 外箱总体积 -->
+        <div class="stat-box">
+          <div class="stat-title">外箱总体积</div>
+          <div class="stat-main-num">
+            <span id="resVol">-</span>
+            <span class="stat-unit">m³</span>
+          </div>
+          <div class="stat-sub">物流计费体积</div>
+        </div>
+
+        <!-- 打包总毛重 -->
+        <div class="stat-box highlight-alt">
+          <div class="stat-title">打包总毛重</div>
+          <div class="stat-main-num" style="color: #b45309;">
+            <span id="resWeight">-</span>
+            <span class="stat-unit">kg</span>
+          </div>
+          <div class="stat-sub">含产品净重 + 包装箱重</div>
+        </div>
+      </div>
+
+      <!-- 重量明细 -->
+      <div class="weight-breakdown">
+        <span>重量明细：</span>
+        <span id="resBreakdown">-</span>
+      </div>
+
+      <!-- 复制按钮 -->
+      <button class="btn-copy" onclick="copyResult()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        一键复制打包信息发给客户/物流
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="toast">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+  <span>打包测算数据已复制到剪贴板！</span>
+</div>
+
+<script>
+/**
+ * 结构化产品数据库
+ */
+const PRODUCT_CONFIG = {
+  "卷帘": {
+    codePrefix: "A",
+    fabricLayerMultiplier: 1,
+    models: [
+      { id: "A01", depth: 0.062, height: 0.084, profileWeight: 0.7, accWeight: 0.8 },
+      { id: "A02", depth: 0.075, height: 0.080, profileWeight: 1.3, accWeight: 0.8 },
+      { id: "A03", depth: 0.065, height: 0.085, profileWeight: 1.5, accWeight: 0.8 },
+      { id: "A04", depth: 0.095, height: 0.130, profileWeight: 2.5, accWeight: 1.7 },
+      { id: "A05", depth: 0.093, height: 0.102, profileWeight: 1.7, accWeight: 1.9 },
+      { id: "A06", depth: 0.075, height: 0.080, profileWeight: 1.3, accWeight: 0.8 },
+      { id: "A07", depth: 0.069, height: 0.081, profileWeight: 1.3, accWeight: 0.8 }
+    ]
+  },
+  "斑马帘": {
+    codePrefix: "B",
+    fabricLayerMultiplier: 2,
+    models: [
+      { id: "B02", depth: 0.075, height: 0.080, profileWeight: 1.4, accWeight: 0.8 },
+      { id: "B03", depth: 0.065, height: 0.085, profileWeight: 1.6, accWeight: 0.8 },
+      { id: "B05", depth: 0.093, height: 0.102, profileWeight: 1.8, accWeight: 1.9 },
+      { id: "B07", depth: 0.069, height: 0.081, profileWeight: 1.4, accWeight: 0.8 }
+    ]
+  },
+  "香格里拉帘": {
+    codePrefix: "C",
+    fabricLayerMultiplier: 1,
+    models: [
+      { id: "C02", depth: 0.075, height: 0.080, profileWeight: 1.3, accWeight: 0.8 },
+      { id: "C03", depth: 0.065, height: 0.085, profileWeight: 1.5, accWeight: 0.8 },
+      { id: "C05", depth: 0.093, height: 0.102, profileWeight: 1.7, accWeight: 1.9 },
+      { id: "C07", depth: 0.069, height: 0.081, profileWeight: 1.3, accWeight: 0.8 }
+    ]
+  }
+};
+
+// 初始化品类列表
+function initCategories() {
+  const catSelect = document.getElementById("categorySelect");
+  catSelect.innerHTML = "";
+  Object.keys(PRODUCT_CONFIG).forEach(cat => {
+    const opt = document.createElement("option");
+    opt.value = cat;
+    opt.textContent = cat;
+    catSelect.appendChild(opt);
+  });
+  onCategoryChange();
+}
+
+// 品类切换联动
+function onCategoryChange() {
+  const cat = document.getElementById("categorySelect").value;
+  const modelSelect = document.getElementById("modelSelect");
+  const zebraNotice = document.getElementById("zebraNotice");
+  
+  const categoryData = PRODUCT_CONFIG[cat];
+  modelSelect.innerHTML = "";
+  
+  categoryData.models.forEach(m => {
+    const opt = document.createElement("option");
+    opt.value = m.id;
+    opt.textContent = `${m.id} 型号`;
+    modelSelect.appendChild(opt);
+  });
+
+  // 提示信息
+  zebraNotice.style.display = (categoryData.fabricLayerMultiplier === 2) ? "flex" : "none";
+
+  onModelChange();
+}
+
+// 型号切换联动
+function onModelChange() {
+  const cat = document.getElementById("categorySelect").value;
+  const modelId = document.getElementById("modelSelect").value;
+  const model = PRODUCT_CONFIG[cat].models.find(m => m.id === modelId);
+
+  if (model) {
+    document.getElementById("specDepth").textContent = (model.depth * 1000).toFixed(0) + "mm";
+    document.getElementById("specHeight").textContent = (model.height * 1000).toFixed(0) + "mm";
+    document.getElementById("specProfile").textContent = model.profileWeight + "kg/m";
+    document.getElementById("specAcc").textContent = model.accWeight + "kg";
+  }
+
+  calculate();
+}
+
+// 快速设置面料克重
+function setFabric(val) {
+  document.getElementById("fabricGsm").value = val;
+  document.querySelectorAll(".chip").forEach(c => {
+    if (c.textContent.startsWith(val)) {
+      c.classList.add("active");
+    } else {
+      c.classList.remove("active");
+    }
+  });
+  calculate();
+}
+
+// 包装余量设置展开收起
+function toggleMarginSetting() {
+  const box = document.getElementById("marginBox");
+  const isShown = box.style.display === "block";
+  box.style.display = isShown ? "none" : "block";
+}
+
+// 核心计算逻辑 (包含包装箱重)
+function calculate() {
+  const cat = document.getElementById("categorySelect").value;
+  const modelId = document.getElementById("modelSelect").value;
+  const catConfig = PRODUCT_CONFIG[cat];
+  if (!catConfig) return;
+  const model = catConfig.models.find(m => m.id === modelId);
+  if (!model) return;
+
+  const w = parseFloat(document.getElementById("width").value) || 0;
+  const h = parseFloat(document.getElementById("height").value) || 0;
+  const gsm = parseFloat(document.getElementById("fabricGsm").value) || 0;
+  const boxPerMeterW = parseFloat(document.getElementById("boxPerMeterWeight").value) || 0;
+  
+  // 分别读取长、深、高的独立余量
+  const marginL = parseFloat(document.getElementById("marginL").value) || 0;
+  const marginD = parseFloat(document.getElementById("marginD").value) || 0;
+  const marginH = parseFloat(document.getElementById("marginH").value) || 0;
+
+  // 尺寸与体积 (米)
+  const boxL = w + marginL;
+  const boxD = model.depth + marginD;
+  const boxH = model.height + marginH;
+  const volume = boxL * boxD * boxH;
+
+  // 重量拆解 (kg)
+  const layer = catConfig.fabricLayerMultiplier || 1;
+  const profileWeight = model.profileWeight * w;
+  const accWeight = model.accWeight;
+  const fabricWeight = (gsm / 1000) * w * h * layer;
+  // 包装箱重量 = 打包箱长(m) * 包装箱每米重(kg/m)
+  const boxWeight = boxL * boxPerMeterW;
+  
+  // 产品净重与打包总毛重
+  const productNetWeight = profileWeight + accWeight + fabricWeight;
+  const totalGrossWeight = productNetWeight + boxWeight;
+
+  // 渲染结果
+  document.getElementById("resDims").textContent = `${boxL.toFixed(2)} × ${boxD.toFixed(3)} × ${boxH.toFixed(3)} m`;
+  document.getElementById("resDimsMm").textContent = `外箱尺寸 (mm)：${Math.round(boxL * 1000)} × ${Math.round(boxD * 1000)} × ${Math.round(boxH * 1000)} mm`;
+  document.getElementById("resVol").textContent = volume.toFixed(4);
+  document.getElementById("resWeight").textContent = totalGrossWeight.toFixed(2);
+  
+  document.getElementById("resBreakdown").textContent = 
+    `产品净重 ${productNetWeight.toFixed(2)}kg (型材${profileWeight.toFixed(2)}+配件${accWeight.toFixed(1)}+面料${fabricWeight.toFixed(2)}) + 箱重 ${boxWeight.toFixed(2)}kg`;
+}
+
+// 复制结果
+function copyResult() {
+  const cat = document.getElementById("categorySelect").value;
+  const modelId = document.getElementById("modelSelect").value;
+  const w = document.getElementById("width").value;
+  const h = document.getElementById("height").value;
+  const gsm = document.getElementById("fabricGsm").value;
+  const boxPerM = document.getElementById("boxPerMeterWeight").value;
+  const dims = document.getElementById("resDims").textContent;
+  const dimsMm = document.getElementById("resDimsMm").textContent.replace("外箱尺寸 (mm)：", "");
+  const vol = document.getElementById("resVol").textContent;
+  const totalW = document.getElementById("resWeight").textContent;
+  const breakdown = document.getElementById("resBreakdown").textContent;
+
+  const text = `【产品打包与物流信息】\n产品品类：${cat} (${modelId} 型号)\n定制尺寸：宽 ${w}m × 高 ${h}m (面料: ${gsm}g/㎡)\n包装箱重：${boxPerM} kg/m\n--------------------\n📦 外箱尺寸：${dims} (${dimsMm})\n📦 外箱体积：${vol} m³\n⚖️ 打包总毛重：${totalW} kg\n(明细: ${breakdown})`;
+
+  navigator.clipboard.writeText(text).then(() => {
+    showToast();
+  }).catch(() => {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand("copy");
+    document.body.removeChild(ta);
+    showToast();
+  });
+}
+
+function showToast() {
+  const toast = document.getElementById("toast");
+  toast.classList.add("show");
+  setTimeout(() => {
+    toast.classList.remove("show");
+  }, 2200);
+}
+
+// 页面加载启动
+window.onload = initCategories;
+</script>
+</body>
+</html>
