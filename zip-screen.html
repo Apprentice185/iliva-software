@@ -376,25 +376,25 @@
 <div class="app-container">
   <!-- Header -->
   <div class="app-header">
-    <div class="header-badge">🛡️ 户外遮阳专属单套打包 v1.0</div>
+    <div class="header-badge">🛡️ 户外遮阳专属单套打包 v2.0</div>
     <h1 class="app-title">防风卷帘打包计算器</h1>
-    <div class="app-subtitle">支持100/120机构自动匹配、边轨堆叠与15kg/m重量测算</div>
+    <div class="app-subtitle">100/120机构自动匹配 · 外箱直出与阶梯米重测算</div>
   </div>
 
   <!-- Body -->
   <div class="app-body">
     <!-- 制作尺寸输入 -->
-    <div class="section-label">1. 输入防风卷帘定制尺寸</div>
+    <div class="section-label">1. 输入防风卷帘制作尺寸</div>
     <div class="grid-2">
       <div class="form-group">
-        <label for="width">定制宽度 (W)</label>
+        <label for="width">制作宽度 (W)</label>
         <div class="input-wrapper">
           <input type="number" id="width" value="3.00" step="0.01" min="0.5" max="10" oninput="calculate()">
           <span class="unit-addon">m</span>
         </div>
       </div>
       <div class="form-group">
-        <label for="height">定制高度 (H)</label>
+        <label for="height">制作高度 (H)</label>
         <div class="input-wrapper">
           <input type="number" id="height" value="2.60" step="0.01" min="0.5" max="10" oninput="calculate()">
           <span class="unit-addon">m</span>
@@ -406,7 +406,7 @@
     <div class="model-match-card">
       <div class="match-header">
         <div class="match-title">
-          <span>⚙️ 系统匹配机构：</span>
+          <span>⚙️ 匹配机构与范围：</span>
           <strong id="matchModelName" style="color: #0284c7;">规格一 (100机构)</strong>
         </div>
         <span class="match-tag" id="matchTag">自动适配</span>
@@ -414,22 +414,22 @@
 
       <div class="match-specs-grid">
         <div>
-          <div class="match-spec-label">主体截面</div>
-          <div class="match-spec-val" id="specHeadbox">0.10 × 0.10 m</div>
+          <div class="match-spec-label">外箱截面 (宽×高)</div>
+          <div class="match-spec-val" id="specSection">0.24 × 0.15 m</div>
         </div>
         <div>
-          <div class="match-spec-label">边轨截面 (2根)</div>
-          <div class="match-spec-val" id="specRails">0.050 × 0.038 m</div>
+          <div class="match-spec-label">计费米重</div>
+          <div class="match-spec-val" id="specRate">15 kg/m</div>
         </div>
         <div>
-          <div class="match-spec-label">边轨长度</div>
-          <div class="match-spec-val" id="specRailLen">- m</div>
+          <div class="match-spec-label">外箱打包长</div>
+          <div class="match-spec-val" id="specBoxLen">- m</div>
         </div>
       </div>
 
       <div class="rule-notice" id="ruleNotice">
-        <span>💡 匹配原因：</span>
-        <span id="matchReasonText">宽度≤4.0m 且 高度≤3.0m，自动采用第一种标准机构。</span>
+        <span>💡 匹配判定：</span>
+        <span id="matchReasonText">-</span>
       </div>
     </div>
 
@@ -455,18 +455,18 @@
 
         <!-- 打包总毛重 -->
         <div class="stat-box highlight-alt">
-          <div class="stat-title">打包总毛重 (15kg/m)</div>
+          <div class="stat-title">打包总毛重</div>
           <div class="stat-main-num" style="color: #b45309;">
             <span id="resWeight">-</span>
             <span class="stat-unit">kg</span>
           </div>
-          <div class="stat-sub" id="resWeightSub">外箱长度 × 15 kg/m</div>
+          <div class="stat-sub" id="resWeightSub">-</div>
         </div>
       </div>
 
-      <!-- 堆叠与包装明细说明 -->
+      <!-- 包装明细说明 -->
       <div class="packing-breakdown-box">
-        <div><strong>📦 堆叠与包装放量明细：</strong></div>
+        <div><strong>📦 打包与计算明细：</strong></div>
         <div id="resBreakdownText" style="margin-top: 4px;">-</div>
       </div>
 
@@ -492,84 +492,75 @@ function calculate() {
 
   if (w <= 0 || h <= 0) return;
 
-  let isSpec1 = false;
-  let isSpec2 = false;
+  // 判定规则与参数定义：
+  // 1. 规格一 (100机构): 宽 0.24m, 高 0.15m, 长度 = W + 0.05m
+  //    - 适用范围1 (W<=4.0 且 H<=3.0): 重量 15 kg/m
+  //    - 适用范围2 (W<=5.5 且 H<=2.5 且 不属于范围1即 W>4.0): 重量 16 kg/m
+  // 2. 规格二 (120机构): 宽 0.26m, 高 0.17m, 长度 = W + 0.05m
+  //    - 适用范围 (4.0<W<=5.5 且 2.5<H<=3.0): 重量 16 kg/m
+  // 3. 超限情况: W>5.5 或 H>3.0 -> 暂按规格二估算，重量 16 kg/m 并警告提示
+
+  let modelName = "";
+  let boxW = 0;
+  let boxH = 0;
+  let weightPerM = 0;
+  let rangeDesc = "";
   let isOverLimit = false;
-  let reason = "";
 
   if (w <= 4.0 && h <= 3.0) {
-    isSpec1 = true;
-    reason = "尺寸在 宽≤4.0m 且 高≤3.0m 范围内，采用规格一 (100机构)。";
+    modelName = "规格一 (100机构 - 范围1)";
+    boxW = 0.24;
+    boxH = 0.15;
+    weightPerM = 15;
+    rangeDesc = "制作尺寸在【范围1：宽≤4.0m 且 高≤3.0m】，打包截面为 0.24×0.15m，米重按 15 kg/m 测算。";
   } else if (w <= 5.5 && h <= 2.5) {
-    isSpec1 = true;
-    reason = "尺寸在 宽≤5.5m 且 高≤2.5m 范围内，采用规格一 (100机构)。";
+    modelName = "规格一 (100机构 - 范围2)";
+    boxW = 0.24;
+    boxH = 0.15;
+    weightPerM = 16;
+    rangeDesc = "制作尺寸在【范围2：宽≤5.5m 且 高≤2.5m】，打包截面为 0.24×0.15m，米重调整为 16 kg/m 测算。";
   } else if (w > 4.0 && w <= 5.5 && h > 2.5 && h <= 3.0) {
-    isSpec2 = true;
-    reason = "尺寸在 4.0m<宽≤5.5m 且 2.5m<高≤3.0m 范围内，采用规格二 (120机构)。";
+    modelName = "规格二 (120机构)";
+    boxW = 0.26;
+    boxH = 0.17;
+    weightPerM = 16;
+    rangeDesc = "制作尺寸在【4.0m<宽≤5.5m 且 2.5m<高≤3.0m】，采用规格二大机构，打包截面为 0.26×0.17m，米重按 16 kg/m 测算。";
   } else {
-    isSpec2 = true;
+    modelName = "规格二 (120机构 - 超出常规)";
+    boxW = 0.26;
+    boxH = 0.17;
+    weightPerM = 16;
     isOverLimit = true;
-    reason = "⚠️ 警告：尺寸已超出常规防风卷帘标准范围(宽5.5m/高3.0m)，系统已按大型 120机构 估算，请与技术复核！";
+    rangeDesc = "⚠️ 警告：尺寸已超出常规防风卷帘标准范围(宽5.5m/高3.0m)，系统已按 120机构 (16kg/m) 估算，请与技术复核！";
   }
 
-  let headboxW = 0, headboxH = 0;
-  let railW = 0, railH = 0;
-  let modelName = "";
-
-  if (isSpec1) {
-    modelName = "规格一 (100机构)";
-    headboxW = 0.10;
-    headboxH = 0.10;
-    railW = 0.050;
-    railH = 0.038;
-  } else {
-    modelName = isOverLimit ? "规格二 (120机构 - 超限)" : "规格二 (120机构)";
-    headboxW = 0.12;
-    headboxH = 0.12;
-    railW = 0.058;
-    railH = 0.038;
-  }
-
-  const railLength = Math.max(0, h - 0.1);
-  const baseLength = Math.max(w, railLength);
-  
-  const boxL = baseLength + 0.05;
-  const boxW = headboxW + 0.24;
-  const boxH = headboxH + 0.15;
+  // 外箱尺寸与体积计算
+  const boxL = w + 0.05;
   const volume = boxL * boxW * boxH;
+  const totalWeight = boxL * weightPerM;
 
-  const totalWeight = boxL * 15;
-
+  // 渲染界面
   document.getElementById("matchModelName").textContent = modelName;
-  document.getElementById("specHeadbox").textContent = `${headboxW.toFixed(2)} × ${headboxH.toFixed(2)} m`;
-  document.getElementById("specRails").textContent = `${railW.toFixed(3)} × ${railH.toFixed(3)} m`;
-  document.getElementById("specRailLen").textContent = `${railLength.toFixed(2)} m (高 - 0.1m)`;
-  
+  document.getElementById("specSection").textContent = `${boxW.toFixed(2)} × ${boxH.toFixed(2)} m`;
+  document.getElementById("specRate").textContent = `${weightPerM} kg/m`;
+  document.getElementById("specBoxLen").textContent = `${boxL.toFixed(2)} m`;
+
   const noticeEl = document.getElementById("ruleNotice");
-  if (isOverLimit) {
-    noticeEl.className = "rule-notice warning";
-  } else {
-    noticeEl.className = "rule-notice";
-  }
-  document.getElementById("matchReasonText").textContent = reason;
+  noticeEl.className = isOverLimit ? "rule-notice warning" : "rule-notice";
+  document.getElementById("matchReasonText").textContent = rangeDesc;
 
   document.getElementById("resDims").textContent = `${boxL.toFixed(2)} × ${boxW.toFixed(2)} × ${boxH.toFixed(2)} m`;
   document.getElementById("resDimsMm").textContent = `外箱尺寸 (mm)：${Math.round(boxL * 1000)} × ${Math.round(boxW * 1000)} × ${Math.round(boxH * 1000)} mm`;
   document.getElementById("resVol").textContent = volume.toFixed(4);
   document.getElementById("resWeight").textContent = totalWeight.toFixed(2);
-  document.getElementById("resWeightSub").textContent = `${boxL.toFixed(2)}m × 15 kg/m`;
-
-  const lenDecide = (w >= railLength) 
-    ? `主体长度(${w.toFixed(2)}m) ≥ 边轨长度(${railLength.toFixed(2)}m)，基准长取 ${w.toFixed(2)}m`
-    : `边轨长度(${railLength.toFixed(2)}m) > 主体长度(${w.toFixed(2)}m)，基准长取 ${railLength.toFixed(2)}m`;
+  document.getElementById("resWeightSub").textContent = `外箱长 ${boxL.toFixed(2)}m × ${weightPerM} kg/m`;
 
   document.getElementById("resBreakdownText").innerHTML = 
-    `• <strong>型材长度：</strong>主体长 ${w.toFixed(2)}m，边轨2根各长 ${railLength.toFixed(2)}m。<br>` +
-    `• <strong>长度判定：</strong>${lenDecide}，加 0.05m 放量后外箱长 <strong>${boxL.toFixed(2)}m</strong>。<br>` +
-    `• <strong>截面放量：</strong>主体宽 ${headboxW}m + 0.24m = <strong>${boxW.toFixed(2)}m</strong>，主体高 ${headboxH}m + 0.15m = <strong>${boxH.toFixed(2)}m</strong>。<br>` +
-    `• <strong>计费重量：</strong>外箱长 ${boxL.toFixed(2)}m × 15kg/m = <strong>${totalWeight.toFixed(2)}kg</strong>。`;
+    `• <strong>外箱长度：</strong>制作宽度 ${w.toFixed(2)}m + 0.05m = <strong>${boxL.toFixed(2)}m</strong>。<br>` +
+    `• <strong>外箱截面：</strong>宽度 <strong>${boxW.toFixed(2)}m</strong>，高度 <strong>${boxH.toFixed(2)}m</strong>。<br>` +
+    `• <strong>打包总重：</strong>外箱长 ${boxL.toFixed(2)}m × ${weightPerM}kg/m = <strong>${totalWeight.toFixed(2)}kg</strong>。`;
 
-  window.lastZipText = `【防风卷帘单套打包物流信息】\n产品品类：防风卷帘 (${modelName})\n定制尺寸：宽 ${w}m × 高 ${h}m\n主体尺寸：${headboxW}×${headboxH}m (长${w}m)\n边轨尺寸：${railW}×${railH}m (2根各长${railLength.toFixed(2)}m)\n--------------------\n📦 外箱尺寸：${boxL.toFixed(2)} × ${boxW.toFixed(2)} × ${boxH.toFixed(2)} m (${Math.round(boxL*1000)}×${Math.round(boxW*1000)}×${Math.round(boxH*1000)}mm)\n📦 外箱总体积：${volume.toFixed(4)} m³\n⚖️ 打包总毛重：${totalWeight.toFixed(2)} kg (按 ${boxL.toFixed(2)}m × 15kg/m 计)`;
+  window.lastZipText = `【防风卷帘单套打包物流信息】\n产品品类：防风卷帘 (${modelName})\n制作尺寸：宽 ${w}m × 高 ${h}m\n--------------------\n📦 外箱尺寸：${boxL.toFixed(2)} × ${boxW.toFixed(2)} × ${boxH.toFixed(2)} m (${Math.round(boxL*1000)}×${Math.round(boxW*1000)}×${Math.round(boxH*1000)}mm)\n📦 外箱总体积：${volume.toFixed(4)} m³\n⚖️ 打包总毛重：${totalWeight.toFixed(2)} kg (按 ${boxL.toFixed(2)}m × ${weightPerM}kg/m 计)`;
 }
 
 function copyResult() {
