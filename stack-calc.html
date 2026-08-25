@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>多产品合并堆叠与智能分箱计算器</title>
+  <style>
+    :root {
+      --primary: #4f46e5;
+      --primary-hover: #4338ca;
+      --primary-light: #eef2ff;
+      --accent: #6366f1;
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --border-focus: #a5b4fc;
+      --warning: #f59e0b;
+      --warning-bg: #fffbeb;
+      --success: #10b981;
+      --success-bg: #f0fdf4;
+      --radius-lg: 16px;
+      --radius-md: 10px;
+      --radius-sm: 6px;
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.08), 0 2px 6px -2px rgba(15, 23, 42, 0.04);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text-main);
+      min-height: 100vh;
+      padding: 16px 12px;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+
+    .app-container {
+      width: 100%;
+      max-width: 640px;
+      background: var(--card);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+      border: 1px solid rgba(226, 232, 240, 0.8);
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+
+    /* Header */
+    .app-header {
+      background: linear-gradient(135deg, #312e81 0%, #0f172a 100%);
+      color: #ffffff;
+      padding: 20px 20px 18px;
+      position: relative;
+    }
+    .header-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      padding: 3px 8px;
+      border-radius: 20px;
+      margin-bottom: 8px;
+      color: #c7d2fe;
+    }
+    .app-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .app-subtitle {
+      font-size: 0.8rem;
+      color: #94a3b8;
+      margin-top: 4px;
+    }
+
+    /* Form Body */
+    .app-body {
+      padding: 18px 18px 22px;
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .section-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .section-label::before {
+      content: "";
+      display: inline-block;
+      width: 4px;
+      height: 12px;
+      background: var(--primary);
+      border-radius: 2px;
+    }
+
+    /* Standard Box Grid Info */
+    .std-boxes-bar {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 10px 12px;
+      margin-bottom: 16px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+    }
+    .std-box-pill {
+      font-size: 0.72rem;
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      padding: 3px 7px;
+      border-radius: 4px;
+      color: #334155;
+    }
+    .std-box-pill strong {
+      color: var(--primary);
+    }
+
+    /* Product Cards List */
+    .product-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .item-card {
+      background: #ffffff;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+      position: relative;
+      transition: all 0.2s ease;
+      box-shadow: var(--shadow-sm);
+    }
+    .item-card:hover {
+      border-color: var(--border-focus);
+    }
+    .item-card.parsed-success {
+      border-color: #cbd5e1;
+      background: #fafafa;
+    }
+
+    .item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .item-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #1e293b;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .item-tag {
+      font-size: 0.7rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: #e2e8f0;
+      color: #475569;
+      font-weight: 600;
+    }
+
+    .btn-remove {
+      background: none;
+      border: none;
+      color: #94a3b8;
+      cursor: pointer;
+      font-size: 0.8rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+      transition: color 0.15s;
+    }
+    .btn-remove:hover {
+      color: #ef4444;
+      background: #fee2e2;
+    }
+
+    textarea.paste-box {
+      width: 100%;
+      height: 60px;
+      padding: 8px 10px;
+      border: 1px dashed #cbd5e1;
+      border-radius: var(--radius-sm);
+      font-size: 0.82rem;
+      color: #334155;
+      background: #f8fafc;
+      resize: none;
+      outline: none;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+    textarea.paste-box:focus {
+      border-color: var(--primary);
+      background: #ffffff;
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+    }
+
+    .parsed-pill-box {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+    .parsed-pill {
+      font-size: 0.75rem;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      color: #1e40af;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .parsed-pill.weight {
+      background: #f0fdf4;
+      border-color: #bbf7d0;
+      color: #15803d;
+      font-weight: 600;
+    }
+
+    .btn-add-item {
+      width: 100%;
+      height: 40px;
+      background: var(--primary-light);
+      color: var(--primary);
+      border: 1.5px dashed var(--border-focus);
+      border-radius: var(--radius-md);
+      font-size: 0.9rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      margin-bottom: 16px;
+    }
+    .btn-add-item:hover {
+      background: #e0e7ff;
+      border-color: var(--primary);
+    }
+
+    .form-group {
+      margin-bottom: 14px;
+      position: relative;
+    }
+    .form-group label {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #334155;
+      margin-bottom: 6px;
+    }
+    input[type="number"] {
+      width: 100%;
+      height: 40px;
+      padding: 8px 12px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-md);
+      font-size: 0.92rem;
+      font-weight: 500;
+      color: var(--text-main);
+      background-color: #ffffff;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+    input[type="number"]:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
+    }
+
+    /* Result Dashboard */
+    .results-card {
+      background: linear-gradient(180deg, #f8fafc 0%, #f5f3ff 100%);
+      border: 1.5px solid #c7d2fe;
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      position: relative;
+    }
+
+    /* Summary Overview Header in Result */
+    .summary-overview-box {
+      background: #ffffff;
+      border: 1.5px solid var(--primary);
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+      margin-bottom: 12px;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+      text-align: center;
+    }
+    .overview-item-title {
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-bottom: 2px;
+    }
+    .overview-item-num {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: #1e293b;
+    }
+
+    /* Box Package Breakdown Cards */
+    .package-cards-box {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .package-card {
+      background: #ffffff;
+      border: 1.5px solid #e2e8f0;
+      border-left: 4px solid var(--primary);
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+      box-shadow: var(--shadow-sm);
+    }
+    .package-card.box-alt {
+      border-left-color: var(--warning);
+    }
+    .package-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+      padding-bottom: 6px;
+      border-bottom: 1px dashed #e2e8f0;
+    }
+    .package-card-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .package-badge {
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 20px;
+      background: #e0e7ff;
+      color: #3730a3;
+    }
+    .package-details-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px 12px;
+      font-size: 0.78rem;
+      color: #475569;
+      margin-top: 4px;
+    }
+    .package-contents {
+      font-size: 0.75rem;
+      color: #64748b;
+      margin-top: 6px;
+      background: #f8fafc;
+      padding: 6px 8px;
+      border-radius: 4px;
+    }
+
+    /* Actions */
+    .btn-copy {
+      width: 100%;
+      height: 46px;
+      background: var(--primary);
+      color: #ffffff;
+      border: none;
+      border-radius: var(--radius-md);
+      font-size: 0.95rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(79, 70, 229, 0.25);
+      transition: all 0.2s ease;
+      margin-top: 8px;
+    }
+    .btn-copy:hover {
+      background: var(--primary-hover);
+      box-shadow: 0 6px 14px rgba(79, 70, 229, 0.3);
+      transform: translateY(-1px);
+    }
+    .btn-copy:active {
+      transform: translateY(1px);
+    }
+
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: rgba(15, 23, 42, 0.92);
+      backdrop-filter: blur(8px);
+      color: #ffffff;
+      padding: 10px 18px;
+      border-radius: 30px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.18);
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      z-index: 9999;
+      pointer-events: none;
+    }
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+    }
+
+    @media (max-width: 480px) {
+      body { padding: 8px 6px; }
+      .app-container { border-radius: 12px; }
+      .app-header { padding: 16px 14px; }
+      .app-body { padding: 14px; }
+      .summary-overview-box { grid-template-columns: 1fr; gap: 6px; }
+      .package-details-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="app-container">
+  <!-- Header -->
+  <div class="app-header">
+    <div class="header-badge">📦 智能合包与自动分箱系统 v2.5</div>
+    <h1 class="app-title">多产品合并堆叠与分箱计算器</h1>
+    <div class="app-subtitle">5款成品箱超限自动拆包、多件分组装箱与物流明细汇总</div>
+  </div>
+
+  <!-- Body -->
+  <div class="app-body">
+    <!-- 成品箱规格库展示 -->
+    <div class="std-boxes-bar">
+      <span style="font-size:0.75rem; font-weight:700; color:#1e293b;">🏭 成品箱库：</span>
+      <span class="std-box-pill">10×10cm (<strong>0.45kg/m</strong>)</span>
+      <span class="std-box-pill">10×20cm (<strong>0.58kg/m</strong>)</span>
+      <span class="std-box-pill">10×30cm (<strong>0.80kg/m</strong>)</span>
+      <span class="std-box-pill">20×20cm (<strong>0.80kg/m</strong>)</span>
+      <span class="std-box-pill">20×30cm (<strong>0.95kg/m</strong>) [最大]</span>
+    </div>
+
+    <div class="section-header">
+      <div class="section-label">1. 添加订单产品 (直接粘贴单件测算结果)</div>
+      <span style="font-size: 0.72rem; color: var(--text-muted);" id="itemCountLabel">共 2 件产品</span>
+    </div>
+
+    <!-- Product list -->
+    <div class="product-list" id="productList"></div>
+
+    <!-- Add item button -->
+    <button class="btn-add-item" onclick="addNewItem()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+      添加一件新产品 (+产品输入框)
+    </button>
+
+    <div class="form-group">
+      <label for="marginLen">封箱两端长度余量 (默认加 0.05m)</label>
+      <div style="position:relative; display:flex; align-items:center;">
+        <input type="number" id="marginLen" value="0.05" step="0.01" min="0" oninput="calculateStacking()">
+        <span style="position:absolute; right:12px; font-size:0.8rem; color:var(--text-muted); pointer-events:none;">m</span>
+      </div>
+    </div>
+
+    <!-- 结果面板 -->
+    <div class="results-card">
+      <!-- 汇总总览条 -->
+      <div class="summary-overview-box">
+        <div>
+          <div class="overview-item-title">打包总包裹数</div>
+          <div class="overview-item-num" id="resTotalPackages" style="color: var(--primary);">-</div>
+        </div>
+        <div>
+          <div class="overview-item-title">整单外箱总体积</div>
+          <div class="overview-item-num" id="resTotalVolume">-</div>
+        </div>
+        <div>
+          <div class="overview-item-title">整单打包总毛重</div>
+          <div class="overview-item-num" id="resTotalGrossW" style="color: #059669;">-</div>
+        </div>
+      </div>
+
+      <!-- 分包裹明细卡片列表 -->
+      <div class="section-label" style="margin-bottom: 8px;">2. 打包分箱方案与各包裹规格明细</div>
+      <div id="packageCardsList" class="package-cards-box"></div>
+
+      <!-- 复制按钮 -->
+      <button class="btn-copy" onclick="copyResult()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        一键复制整单发货分包明细发给物流
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="toast">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+  <span>整单发货分包明细已复制到剪贴板！</span>
+</div>
+
+<script>
+// 5 种标准成品箱规格库 (按截面积由小到大排序)
+const STANDARD_BOXES = [
+  { id: "BOX_10_10", name: "10×10cm", w: 0.10, h: 0.10, area: 0.010, weightPerMeter: 0.45 },
+  { id: "BOX_10_20", name: "10×20cm", w: 0.10, h: 0.20, area: 0.020, weightPerMeter: 0.58 },
+  { id: "BOX_10_30", name: "10×30cm", w: 0.10, h: 0.30, area: 0.030, weightPerMeter: 0.80 },
+  { id: "BOX_20_20", name: "20×20cm", w: 0.20, h: 0.20, area: 0.040, weightPerMeter: 0.80 },
+  { id: "BOX_20_30", name: "20×30cm", w: 0.20, h: 0.30, area: 0.060, weightPerMeter: 0.95 }
+];
+const MAX_BOX = STANDARD_BOXES[STANDARD_BOXES.length - 1]; // 20×30cm 最大箱
+
+let itemsData = [
+  { id: 1, text: "", parsed: null },
+  { id: 2, text: "", parsed: null }
+];
+
+// 智能文本解析器
+function parseProductText(rawText) {
+  if (!rawText || rawText.trim() === "") return null;
+
+  let title = "定制产品";
+  let length = 0;
+  let depth = 0;
+  let height = 0;
+  let weight = 0;
+
+  const typeMatch = rawText.match(/产品品类[：:]\s*([^\n\r]+)/) || rawText.match(/类型[：:]\s*([^\n\r]+)/);
+  if (typeMatch) {
+    title = typeMatch[1].trim();
+  }
+
+  const mDimMatch = rawText.match(/外箱尺寸[：:]\s*([0-9.]+)\s*[×*xX]\s*([0-9.]+)\s*[×*xX]\s*([0-9.]+)\s*m/i) ||
+                    rawText.match(/([0-9.]+)\s*[×*xX]\s*([0-9.]+)\s*[×*xX]\s*([0-9.]+)\s*m/i);
+
+  if (mDimMatch) {
+    length = parseFloat(mDimMatch[1]) || 0;
+    depth = parseFloat(mDimMatch[2]) || 0;
+    height = parseFloat(mDimMatch[3]) || 0;
+  } else {
+    const mmDimMatch = rawText.match(/([0-9]{3,5})\s*[×*xX]\s*([0-9]{2,4})\s*[×*xX]\s*([0-9]{2,4})\s*mm/i);
+    if (mmDimMatch) {
+      length = parseFloat(mmDimMatch[1]) / 1000;
+      depth = parseFloat(mmDimMatch[2]) / 1000;
+      height = parseFloat(mmDimMatch[3]) / 1000;
+    }
+  }
+
+  const netMatch = rawText.match(/产品净重\s*([0-9.]+)\s*kg/i);
+  const grossMatch = rawText.match(/总毛重[：:]\s*([0-9.]+)\s*kg/i) ||
+                     rawText.match(/总重量[：:]\s*([0-9.]+)\s*kg/i) ||
+                     rawText.match(/([0-9.]+)\s*kg/i);
+
+  if (netMatch) {
+    weight = parseFloat(netMatch[1]) || 0;
+  } else if (grossMatch) {
+    weight = parseFloat(grossMatch[1]) || 0;
+  }
+
+  if (length > 0 && depth > 0 && height > 0) {
+    return {
+      title,
+      length,
+      depth,
+      height,
+      weight,
+      volume: length * depth * height
+    };
+  }
+
+  return null;
+}
+
+function renderItemList() {
+  const container = document.getElementById("productList");
+  container.innerHTML = "";
+
+  itemsData.forEach((item, index) => {
+    const card = document.createElement("div");
+    card.className = `item-card ${item.parsed ? 'parsed-success' : ''}`;
+    
+    const parsedHtml = item.parsed ? `
+      <div class="parsed-pill-box">
+        <span class="parsed-pill">📏 尺寸: ${item.parsed.length.toFixed(2)} × ${item.parsed.depth.toFixed(3)} × ${item.parsed.height.toFixed(3)} m</span>
+        <span class="parsed-pill">📦 体积: ${item.parsed.volume.toFixed(4)} m³</span>
+        <span class="parsed-pill weight">⚖️ 重: ${item.parsed.weight.toFixed(2)} kg</span>
+      </div>
+    ` : `<div style="font-size:0.72rem; color:#94a3b8; margin-top:4px;">💡 提示：在单件计算器中点击【一键复制】后直接粘贴到此</div>`;
+
+    card.innerHTML = `
+      <div class="item-header">
+        <div class="item-title">
+          <span>产品 ${index + 1}</span>
+          ${item.parsed ? `<span class="item-tag">${item.parsed.title}</span>` : ''}
+        </div>
+        ${itemsData.length > 1 ? `<button class="btn-remove" onclick="removeItem(${index})">✕ 删除</button>` : ''}
+      </div>
+      <textarea class="paste-box" placeholder="点击此处，粘贴 (Ctrl+V) 之前计算出的产品打包文本..." oninput="onItemTextInput(${index}, this.value)">${item.text}</textarea>
+      ${parsedHtml}
+    `;
+
+    container.appendChild(card);
+  });
+
+  document.getElementById("itemCountLabel").textContent = `共 ${itemsData.length} 件产品`;
+  calculateStacking();
+}
+
+function onItemTextInput(index, value) {
+  itemsData[index].text = value;
+  itemsData[index].parsed = parseProductText(value);
+  renderItemList();
+}
+
+function addNewItem() {
+  itemsData.push({ id: Date.now(), text: "", parsed: null });
+  renderItemList();
+}
+
+function removeItem(index) {
+  if (itemsData.length <= 1) return;
+  itemsData.splice(index, 1);
+  renderItemList();
+}
+
+// 判定一组产品能否放入某个特定的成品箱中 (支持垂直、水平、2列矩阵、以及90度旋转)
+function findBestBoxForGroup(groupItems) {
+  if (!groupItems || groupItems.length === 0) return null;
+  const count = groupItems.length;
+
+  // 1. 垂直堆叠需求
+  const v_w = Math.max(...groupItems.map(i => i.depth));
+  const v_h = groupItems.reduce((s, i) => s + i.height, 0);
+
+  // 2. 水平并排需求
+  const h_w = groupItems.reduce((s, i) => s + i.depth, 0);
+  const h_h = Math.max(...groupItems.map(i => i.height));
+
+  // 3. 2列矩阵需求 (>=3件)
+  let grid_w = 0, grid_h = 0;
+  if (count >= 3) {
+    const cols = 2;
+    const rows = Math.ceil(count / cols);
+    const avgD = groupItems.reduce((s, i) => s + i.depth, 0) / count;
+    const avgH = groupItems.reduce((s, i) => s + i.height, 0) / count;
+    grid_w = avgD * cols;
+    grid_h = avgH * rows;
+  }
+
+  const orientations = [
+    { type: "垂直堆叠", w: v_w, h: v_h },
+    { type: "水平并排", w: h_w, h: h_h }
+  ];
+  if (count >= 3) {
+    orientations.push({ type: "双列矩阵方捆", w: grid_w, h: grid_h });
+  }
+
+  function canFit(rw, rh, bw, bh) {
+    return ((rw <= bw + 0.005) && (rh <= bh + 0.005)) || ((rw <= bh + 0.005) && (rh <= bw + 0.005));
+  }
+
+  for (let box of STANDARD_BOXES) {
+    for (let orient of orientations) {
+      if (canFit(orient.w, orient.h, box.w, box.h)) {
+        return {
+          box: box,
+          orientation: orient.type,
+          reqW: orient.w,
+          reqH: orient.h
+        };
+      }
+    }
+  }
+
+  return null; // 超出最大 20x30cm 箱
+}
+
+// 核心智能分箱算法 (Bin Packing & Auto-Splitting)
+function calculateStacking() {
+  const validItems = [];
+  itemsData.forEach((item, idx) => {
+    if (item.parsed !== null) {
+      validItems.push({
+        index: idx + 1,
+        ...item.parsed
+      });
+    }
+  });
+
+  const cardsContainer = document.getElementById("packageCardsList");
+  cardsContainer.innerHTML = "";
+
+  if (validItems.length === 0) {
+    document.getElementById("resTotalPackages").textContent = "-";
+    document.getElementById("resTotalVolume").textContent = "-";
+    document.getElementById("resTotalGrossW").textContent = "-";
+    cardsContainer.innerHTML = `<div style="text-align:center; color:#94a3b8; font-size:0.8rem; padding:16px;">请在上方录入或粘贴产品测算数据</div>`;
+    return;
+  }
+
+  const marginL = parseFloat(document.getElementById("marginLen").value) || 0;
+
+  // 分箱装箱策略：贪心装箱 (Greedy Fit)
+  const packages = [];
+  let currentGroup = [];
+
+  validItems.forEach((item) => {
+    const testGroup = [...currentGroup, item];
+    const match = findBestBoxForGroup(testGroup);
+
+    if (match !== null) {
+      // 能装下，加入当前箱
+      currentGroup.push(item);
+    } else {
+      // 加上这件产品后超出了最大箱，将当前已满的一组打包封箱
+      if (currentGroup.length > 0) {
+        const groupMatch = findBestBoxForGroup(currentGroup);
+        packages.push({
+          items: [...currentGroup],
+          boxInfo: groupMatch
+        });
+      }
+      // 将当前产品作为新包裹的第一件
+      currentGroup = [item];
+    }
+  });
+
+  // 处理最后一组
+  if (currentGroup.length > 0) {
+    const groupMatch = findBestBoxForGroup(currentGroup) || {
+      box: MAX_BOX,
+      orientation: "单件超大装箱",
+      reqW: MAX_BOX.w,
+      reqH: MAX_BOX.h
+    };
+    packages.push({
+      items: [...currentGroup],
+      boxInfo: groupMatch
+    });
+  }
+
+  // 计算所有包裹的数据并渲染明细
+  let grandTotalVolume = 0;
+  let grandTotalWeight = 0;
+
+  packages.forEach((pkg, pIdx) => {
+    const maxL = Math.max(...pkg.items.map(i => i.length));
+    const boxL = maxL + marginL;
+    const boxW = pkg.boxInfo.box.w;
+    const boxH = pkg.boxInfo.box.h;
+    const pkgVol = boxL * boxW * boxH;
+
+    const productW = pkg.items.reduce((s, i) => s + i.weight, 0);
+    const boxWgt = boxL * pkg.boxInfo.box.weightPerMeter;
+    const pkgTotalW = productW + boxWgt;
+
+    grandTotalVolume += pkgVol;
+    grandTotalWeight += pkgTotalW;
+
+    pkg.boxLength = boxL;
+    pkg.boxWidth = boxW;
+    pkg.boxHeight = boxH;
+    pkg.volume = pkgVol;
+    pkg.totalWeight = pkgTotalW;
+    pkg.productWeight = productW;
+    pkg.boxWeight = boxWgt;
+
+    // 渲染每个包裹卡片
+    const card = document.createElement("div");
+    card.className = `package-card ${pIdx % 2 === 1 ? 'box-alt' : ''}`;
+    
+    const itemsTitles = pkg.items.map(it => `产品${it.index} (${it.title})`).join("、");
+
+    card.innerHTML = `
+      <div class="package-card-header">
+        <div class="package-card-title">
+          <span>📦 包裹 ${pIdx + 1}：${pkg.boxInfo.box.name} 成品箱</span>
+        </div>
+        <span class="package-badge">${pkg.items.length} 件产品合包</span>
+      </div>
+      <div class="package-details-grid">
+        <div><strong>外箱规格：</strong>${boxL.toFixed(2)} × ${boxW.toFixed(2)} × ${boxH.toFixed(2)} m (${Math.round(boxL*1000)}×${Math.round(boxW*1000)}×${Math.round(boxH*1000)} mm)</div>
+        <div><strong>包裹毛重：</strong><span style="color:#059669; font-weight:700;">${pkgTotalW.toFixed(2)} kg</span> (产品${productW.toFixed(2)} + 箱${boxWgt.toFixed(2)}kg)</div>
+        <div><strong>包裹体积：</strong>${pkgVol.toFixed(4)} m³</div>
+        <div><strong>排布方式：</strong>${pkg.boxInfo.orientation}</div>
+      </div>
+      <div class="package-contents">
+        📋 <strong>内装产品：</strong>${itemsTitles}
+      </div>
+    `;
+
+    cardsContainer.appendChild(card);
+  });
+
+  // 渲染顶部总览
+  document.getElementById("resTotalPackages").textContent = `${packages.length} 个包裹`;
+  document.getElementById("resTotalVolume").textContent = `${grandTotalVolume.toFixed(4)} m³`;
+  document.getElementById("resTotalGrossW").textContent = `${grandTotalWeight.toFixed(2)} kg`;
+
+  window.lastCalculatedPackages = packages;
+  window.lastGrandVol = grandTotalVolume;
+  window.lastGrandWeight = grandTotalWeight;
+}
+
+function copyResult() {
+  const pkgs = window.lastCalculatedPackages;
+  if (!pkgs || pkgs.length === 0) {
+    alert("请先录入产品测算数据！");
+    return;
+  }
+
+  let detailText = "";
+  pkgs.forEach((pkg, idx) => {
+    const itemsTitles = pkg.items.map(it => `产品${it.index}(${it.title})`).join(", ");
+    detailText += `\n【包裹 ${idx + 1}】\n  • 选用箱规：${pkg.boxInfo.box.name} (外箱尺寸: ${pkg.boxLength.toFixed(2)}×${pkg.boxWidth.toFixed(2)}×${pkg.boxHeight.toFixed(2)}m)\n  • 包裹毛重：${pkg.totalWeight.toFixed(2)} kg (体积: ${pkg.volume.toFixed(4)} m³)\n  • 内含件数：${pkg.items.length}件 [${itemsTitles}]\n`;
+  });
+
+  const text = `【订单多产品发货打包方案】\n打包总包裹数：共 ${pkgs.length} 个包裹\n整单发货总重：${window.lastGrandWeight.toFixed(2)} kg\n整单发货总体积：${window.lastGrandVol.toFixed(4)} m³\n--------------------${detailText}`;
+
+  navigator.clipboard.writeText(text).then(() => {
+    showToast();
+  }).catch(() => {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand("copy");
+    document.body.removeChild(ta);
+    showToast();
+  });
+}
+
+function showToast() {
+  const toast = document.getElementById("toast");
+  toast.classList.add("show");
+  setTimeout(() => {
+    toast.classList.remove("show");
+  }, 2200);
+}
+
+window.onload = renderItemList;
+</script>
+</body>
+</html>
