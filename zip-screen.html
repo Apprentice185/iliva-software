@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>防风卷帘单套打包测算工具 - ilvia</title>
+  <style>
+    :root {
+      --primary: #0284c7;
+      --primary-hover: #0369a1;
+      --primary-light: #f0f9ff;
+      --accent: #38bdf8;
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --border-focus: #7dd3fc;
+      --warning: #f59e0b;
+      --warning-bg: #fffbeb;
+      --success: #10b981;
+      --radius-lg: 16px;
+      --radius-md: 10px;
+      --radius-sm: 6px;
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.08), 0 2px 6px -2px rgba(15, 23, 42, 0.04);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text-main);
+      min-height: 100vh;
+      padding: 16px 12px;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+
+    .app-container {
+      width: 100%;
+      max-width: 540px;
+      background: var(--card);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+      border: 1px solid rgba(226, 232, 240, 0.8);
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+
+    /* Header */
+    .app-header {
+      background: linear-gradient(135deg, #0c4a6e 0%, #0f172a 100%);
+      color: #ffffff;
+      padding: 20px 20px 18px;
+      position: relative;
+    }
+    .header-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      padding: 3px 8px;
+      border-radius: 20px;
+      margin-bottom: 8px;
+      color: #7dd3fc;
+    }
+    .app-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .app-subtitle {
+      font-size: 0.8rem;
+      color: #94a3b8;
+      margin-top: 4px;
+    }
+
+    /* Form Body */
+    .app-body {
+      padding: 18px 18px 22px;
+    }
+
+    .section-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .section-label::before {
+      content: "";
+      display: inline-block;
+      width: 4px;
+      height: 12px;
+      background: var(--primary);
+      border-radius: 2px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .form-group {
+      margin-bottom: 14px;
+      position: relative;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #334155;
+      margin-bottom: 6px;
+    }
+
+    .input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    input[type="number"] {
+      width: 100%;
+      height: 42px;
+      padding: 8px 12px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-md);
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: var(--text-main);
+      background-color: #ffffff;
+      outline: none;
+      transition: all 0.2s ease;
+      -moz-appearance: none;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    input[type="number"]:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+    }
+
+    .unit-addon {
+      position: absolute;
+      right: 12px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+
+    /* Auto Model Match Card */
+    .model-match-card {
+      background: #f0f9ff;
+      border: 1.5px solid #bae6fd;
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+      margin-bottom: 16px;
+      position: relative;
+    }
+    .match-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .match-title {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #0369a1;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .match-tag {
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 20px;
+      background: #0284c7;
+      color: #ffffff;
+    }
+    .match-specs-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      font-size: 0.75rem;
+      color: #334155;
+      background: #ffffff;
+      padding: 8px 10px;
+      border-radius: var(--radius-sm);
+      border: 1px solid #e0f2fe;
+      text-align: center;
+    }
+    .match-spec-label { font-size: 0.68rem; color: var(--text-muted); margin-bottom: 2px; }
+    .match-spec-val { font-weight: 700; color: #0f172a; }
+
+    /* Range rule notice */
+    .rule-notice {
+      font-size: 0.73rem;
+      color: #0284c7;
+      margin-top: 8px;
+      line-height: 1.4;
+      display: flex;
+      align-items: flex-start;
+      gap: 4px;
+    }
+    .rule-notice.warning {
+      color: #b45309;
+      background: var(--warning-bg);
+      border: 1px solid #fef3c7;
+      padding: 6px 8px;
+      border-radius: var(--radius-sm);
+    }
+
+    /* Result Dashboard */
+    .results-card {
+      background: linear-gradient(180deg, #f8fafc 0%, #f0f9ff 100%);
+      border: 1.5px solid #bae6fd;
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      margin-top: 8px;
+      position: relative;
+    }
+
+    .results-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .stat-box {
+      background: #ffffff;
+      padding: 12px 14px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+    }
+    .stat-box.highlight {
+      background: #ffffff;
+      border-left: 3.5px solid var(--primary);
+    }
+    .stat-box.highlight-alt {
+      background: #ffffff;
+      border-left: 3.5px solid #f59e0b;
+    }
+    .stat-box.full-width {
+      grid-column: span 2;
+    }
+
+    .stat-title {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      margin-bottom: 4px;
+    }
+    .stat-main-num {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: #0f172a;
+      display: flex;
+      align-items: baseline;
+      gap: 3px;
+    }
+    .stat-unit {
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+    .stat-sub {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .packing-breakdown-box {
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px dashed #93c5fd;
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      font-size: 0.75rem;
+      color: #334155;
+      line-height: 1.5;
+    }
+
+    /* Actions */
+    .btn-copy {
+      width: 100%;
+      height: 46px;
+      background: var(--primary);
+      color: #ffffff;
+      border: none;
+      border-radius: var(--radius-md);
+      font-size: 0.95rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(2, 132, 199, 0.25);
+      transition: all 0.2s ease;
+      margin-top: 14px;
+    }
+    .btn-copy:hover {
+      background: var(--primary-hover);
+      box-shadow: 0 6px 14px rgba(2, 132, 199, 0.3);
+      transform: translateY(-1px);
+    }
+    .btn-copy:active {
+      transform: translateY(1px);
+    }
+
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: rgba(15, 23, 42, 0.92);
+      backdrop-filter: blur(8px);
+      color: #ffffff;
+      padding: 10px 18px;
+      border-radius: 30px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.18);
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      z-index: 9999;
+      pointer-events: none;
+    }
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+    }
+
+    @media (max-width: 480px) {
+      body { padding: 8px 6px; }
+      .app-container { border-radius: 12px; }
+      .app-header { padding: 16px 14px; }
+      .app-body { padding: 14px; }
+      .match-specs-grid { grid-template-columns: 1fr; gap: 4px; text-align: left; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="app-container">
+  <!-- Header -->
+  <div class="app-header">
+    <div class="header-badge">🛡️ 户外遮阳专属单套打包 v1.0</div>
+    <h1 class="app-title">防风卷帘打包计算器</h1>
+    <div class="app-subtitle">支持100/120机构自动匹配、边轨堆叠与15kg/m重量测算</div>
+  </div>
+
+  <!-- Body -->
+  <div class="app-body">
+    <!-- 制作尺寸输入 -->
+    <div class="section-label">1. 输入防风卷帘定制尺寸</div>
+    <div class="grid-2">
+      <div class="form-group">
+        <label for="width">定制宽度 (W)</label>
+        <div class="input-wrapper">
+          <input type="number" id="width" value="3.00" step="0.01" min="0.5" max="10" oninput="calculate()">
+          <span class="unit-addon">m</span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="height">定制高度 (H)</label>
+        <div class="input-wrapper">
+          <input type="number" id="height" value="2.60" step="0.01" min="0.5" max="10" oninput="calculate()">
+          <span class="unit-addon">m</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 智能机构适配卡片 -->
+    <div class="model-match-card">
+      <div class="match-header">
+        <div class="match-title">
+          <span>⚙️ 系统匹配机构：</span>
+          <strong id="matchModelName" style="color: #0284c7;">规格一 (100机构)</strong>
+        </div>
+        <span class="match-tag" id="matchTag">自动适配</span>
+      </div>
+
+      <div class="match-specs-grid">
+        <div>
+          <div class="match-spec-label">主体截面</div>
+          <div class="match-spec-val" id="specHeadbox">0.10 × 0.10 m</div>
+        </div>
+        <div>
+          <div class="match-spec-label">边轨截面 (2根)</div>
+          <div class="match-spec-val" id="specRails">0.050 × 0.038 m</div>
+        </div>
+        <div>
+          <div class="match-spec-label">边轨长度</div>
+          <div class="match-spec-val" id="specRailLen">- m</div>
+        </div>
+      </div>
+
+      <div class="rule-notice" id="ruleNotice">
+        <span>💡 匹配原因：</span>
+        <span id="matchReasonText">宽度≤4.0m 且 高度≤3.0m，自动采用第一种标准机构。</span>
+      </div>
+    </div>
+
+    <!-- 结果面板 -->
+    <div class="results-card">
+      <div class="results-grid">
+        <!-- 包装外箱尺寸 -->
+        <div class="stat-box highlight full-width">
+          <div class="stat-title">防风卷帘外箱尺寸 (长 × 宽 × 高)</div>
+          <div class="stat-main-num" id="resDims">-</div>
+          <div class="stat-sub" id="resDimsMm">外箱尺寸 (mm)：-</div>
+        </div>
+        
+        <!-- 外箱总体积 -->
+        <div class="stat-box">
+          <div class="stat-title">外箱总体积</div>
+          <div class="stat-main-num">
+            <span id="resVol">-</span>
+            <span class="stat-unit">m³</span>
+          </div>
+          <div class="stat-sub">物流计费体积</div>
+        </div>
+
+        <!-- 打包总毛重 -->
+        <div class="stat-box highlight-alt">
+          <div class="stat-title">打包总毛重 (15kg/m)</div>
+          <div class="stat-main-num" style="color: #b45309;">
+            <span id="resWeight">-</span>
+            <span class="stat-unit">kg</span>
+          </div>
+          <div class="stat-sub" id="resWeightSub">外箱长度 × 15 kg/m</div>
+        </div>
+      </div>
+
+      <!-- 堆叠与包装明细说明 -->
+      <div class="packing-breakdown-box">
+        <div><strong>📦 堆叠与包装放量明细：</strong></div>
+        <div id="resBreakdownText" style="margin-top: 4px;">-</div>
+      </div>
+
+      <!-- 复制按钮 -->
+      <button class="btn-copy" onclick="copyResult()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        一键复制防风卷帘打包信息发给客户/物流
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="toast">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+  <span>防风卷帘打包信息已复制到剪贴板！</span>
+</div>
+
+<script>
+function calculate() {
+  const w = parseFloat(document.getElementById("width").value) || 0;
+  const h = parseFloat(document.getElementById("height").value) || 0;
+
+  if (w <= 0 || h <= 0) return;
+
+  let isSpec1 = false;
+  let isSpec2 = false;
+  let isOverLimit = false;
+  let reason = "";
+
+  if (w <= 4.0 && h <= 3.0) {
+    isSpec1 = true;
+    reason = "尺寸在 宽≤4.0m 且 高≤3.0m 范围内，采用规格一 (100机构)。";
+  } else if (w <= 5.5 && h <= 2.5) {
+    isSpec1 = true;
+    reason = "尺寸在 宽≤5.5m 且 高≤2.5m 范围内，采用规格一 (100机构)。";
+  } else if (w > 4.0 && w <= 5.5 && h > 2.5 && h <= 3.0) {
+    isSpec2 = true;
+    reason = "尺寸在 4.0m<宽≤5.5m 且 2.5m<高≤3.0m 范围内，采用规格二 (120机构)。";
+  } else {
+    isSpec2 = true;
+    isOverLimit = true;
+    reason = "⚠️ 警告：尺寸已超出常规防风卷帘标准范围(宽5.5m/高3.0m)，系统已按大型 120机构 估算，请与技术复核！";
+  }
+
+  let headboxW = 0, headboxH = 0;
+  let railW = 0, railH = 0;
+  let modelName = "";
+
+  if (isSpec1) {
+    modelName = "规格一 (100机构)";
+    headboxW = 0.10;
+    headboxH = 0.10;
+    railW = 0.050;
+    railH = 0.038;
+  } else {
+    modelName = isOverLimit ? "规格二 (120机构 - 超限)" : "规格二 (120机构)";
+    headboxW = 0.12;
+    headboxH = 0.12;
+    railW = 0.058;
+    railH = 0.038;
+  }
+
+  const railLength = Math.max(0, h - 0.1);
+  const baseLength = Math.max(w, railLength);
+  
+  const boxL = baseLength + 0.05;
+  const boxW = headboxW + 0.24;
+  const boxH = headboxH + 0.15;
+  const volume = boxL * boxW * boxH;
+
+  const totalWeight = boxL * 15;
+
+  document.getElementById("matchModelName").textContent = modelName;
+  document.getElementById("specHeadbox").textContent = `${headboxW.toFixed(2)} × ${headboxH.toFixed(2)} m`;
+  document.getElementById("specRails").textContent = `${railW.toFixed(3)} × ${railH.toFixed(3)} m`;
+  document.getElementById("specRailLen").textContent = `${railLength.toFixed(2)} m (高 - 0.1m)`;
+  
+  const noticeEl = document.getElementById("ruleNotice");
+  if (isOverLimit) {
+    noticeEl.className = "rule-notice warning";
+  } else {
+    noticeEl.className = "rule-notice";
+  }
+  document.getElementById("matchReasonText").textContent = reason;
+
+  document.getElementById("resDims").textContent = `${boxL.toFixed(2)} × ${boxW.toFixed(2)} × ${boxH.toFixed(2)} m`;
+  document.getElementById("resDimsMm").textContent = `外箱尺寸 (mm)：${Math.round(boxL * 1000)} × ${Math.round(boxW * 1000)} × ${Math.round(boxH * 1000)} mm`;
+  document.getElementById("resVol").textContent = volume.toFixed(4);
+  document.getElementById("resWeight").textContent = totalWeight.toFixed(2);
+  document.getElementById("resWeightSub").textContent = `${boxL.toFixed(2)}m × 15 kg/m`;
+
+  const lenDecide = (w >= railLength) 
+    ? `主体长度(${w.toFixed(2)}m) ≥ 边轨长度(${railLength.toFixed(2)}m)，基准长取 ${w.toFixed(2)}m`
+    : `边轨长度(${railLength.toFixed(2)}m) > 主体长度(${w.toFixed(2)}m)，基准长取 ${railLength.toFixed(2)}m`;
+
+  document.getElementById("resBreakdownText").innerHTML = 
+    `• <strong>型材长度：</strong>主体长 ${w.toFixed(2)}m，边轨2根各长 ${railLength.toFixed(2)}m。<br>` +
+    `• <strong>长度判定：</strong>${lenDecide}，加 0.05m 放量后外箱长 <strong>${boxL.toFixed(2)}m</strong>。<br>` +
+    `• <strong>截面放量：</strong>主体宽 ${headboxW}m + 0.24m = <strong>${boxW.toFixed(2)}m</strong>，主体高 ${headboxH}m + 0.15m = <strong>${boxH.toFixed(2)}m</strong>。<br>` +
+    `• <strong>计费重量：</strong>外箱长 ${boxL.toFixed(2)}m × 15kg/m = <strong>${totalWeight.toFixed(2)}kg</strong>。`;
+
+  window.lastZipText = `【防风卷帘单套打包物流信息】\n产品品类：防风卷帘 (${modelName})\n定制尺寸：宽 ${w}m × 高 ${h}m\n主体尺寸：${headboxW}×${headboxH}m (长${w}m)\n边轨尺寸：${railW}×${railH}m (2根各长${railLength.toFixed(2)}m)\n--------------------\n📦 外箱尺寸：${boxL.toFixed(2)} × ${boxW.toFixed(2)} × ${boxH.toFixed(2)} m (${Math.round(boxL*1000)}×${Math.round(boxW*1000)}×${Math.round(boxH*1000)}mm)\n📦 外箱总体积：${volume.toFixed(4)} m³\n⚖️ 打包总毛重：${totalWeight.toFixed(2)} kg (按 ${boxL.toFixed(2)}m × 15kg/m 计)`;
+}
+
+function copyResult() {
+  if (!window.lastZipText) calculate();
+  const text = window.lastZipText.replace(/\\n/g, '\n');
+  navigator.clipboard.writeText(text).then(() => {
+    showToast();
+  }).catch(() => {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand("copy");
+    document.body.removeChild(ta);
+    showToast();
+  });
+}
+
+function showToast() {
+  const toast = document.getElementById("toast");
+  toast.classList.add("show");
+  setTimeout(() => {
+    toast.classList.remove("show");
+  }, 2200);
+}
+
+window.onload = calculate;
+</script>
+</body>
+</html>
