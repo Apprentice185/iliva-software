@@ -121,6 +121,12 @@
       gap: 12px;
     }
 
+    .grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+    }
+
     .form-group {
       margin-bottom: 14px;
       position: relative;
@@ -252,6 +258,7 @@
       gap: 4px;
       margin-bottom: 14px;
       user-select: none;
+      font-weight: 600;
     }
     .accordion-toggle:hover {
       color: var(--primary);
@@ -399,6 +406,7 @@
       .app-header { padding: 16px 14px; }
       .app-body { padding: 14px; }
       .spec-preview-card { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+      .grid-3 { grid-template-columns: 1fr; gap: 8px; }
     }
   </style>
 </head>
@@ -407,7 +415,7 @@
 <div class="app-container">
   <!-- Header -->
   <div class="app-header">
-    <div class="header-badge">📦 物流参数测算 v1.2</div>
+    <div class="header-badge">📦 物流参数测算 v1.4</div>
     <h1 class="app-title">产品打包尺寸与重量计算器</h1>
     <div class="app-subtitle">智能遮阳定制产品外箱规格与毛重快速估算</div>
   </div>
@@ -419,9 +427,7 @@
     <div class="grid-2">
       <div class="form-group">
         <label for="categorySelect">产品品类</label>
-        <select id="categorySelect" onchange="onCategoryChange()">
-          <!-- 动态加载或按规则加载 -->
-        </select>
+        <select id="categorySelect" onchange="onCategoryChange()"></select>
       </div>
       <div class="form-group">
         <label for="modelSelect">机构型号</label>
@@ -450,7 +456,7 @@
     </div>
 
     <!-- 尺寸与面料 -->
-    <div class="section-label">2. 输入制作参数</div>
+    <div class="section-label">2. 输入制作与包装参数</div>
     <div class="grid-2">
       <div class="form-group">
         <label for="width">制作宽度 (W)</label>
@@ -468,12 +474,24 @@
       </div>
     </div>
 
-    <div class="form-group">
-      <label for="fabricGsm">面料克重</label>
-      <div class="input-wrapper">
-        <input type="number" id="fabricGsm" value="420" step="10" min="0" oninput="calculate()">
-        <span class="unit-addon">g/m²</span>
+    <div class="grid-2">
+      <div class="form-group">
+        <label for="fabricGsm">面料克重</label>
+        <div class="input-wrapper">
+          <input type="number" id="fabricGsm" value="420" step="10" min="0" oninput="calculate()">
+          <span class="unit-addon">g/m²</span>
+        </div>
       </div>
+      <div class="form-group">
+        <label for="boxPerMeterWeight">包装箱每米重量</label>
+        <div class="input-wrapper">
+          <input type="number" id="boxPerMeterWeight" value="0.30" step="0.05" min="0" oninput="calculate()">
+          <span class="unit-addon">kg/m</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top: -6px; margin-bottom: 14px;">
       <div class="chip-group">
         <span class="chip" onclick="setFabric(280)">280g</span>
         <span class="chip" onclick="setFabric(360)">360g</span>
@@ -486,17 +504,33 @@
       </div>
     </div>
 
-    <!-- 包装余量调整 -->
+    <!-- 包装余量调整 (三向独立配置) -->
     <div class="accordion-toggle" onclick="toggleMarginSetting()">
       <span id="marginIcon">⚙️</span>
-      <span>外包装放量设置 (默认长宽高各加 0.05m)</span>
+      <span>外包装放量设置 (可分别微调 长/深/高 余量) ▾</span>
     </div>
     <div id="marginBox" class="accordion-content">
-      <div class="form-group" style="margin-bottom:0;">
-        <label for="marginInput" style="font-size:0.75rem;">各边包装余量 (m)</label>
-        <div class="input-wrapper">
-          <input type="number" id="marginInput" value="0.05" step="0.01" min="0" oninput="calculate()" style="height:36px; font-size:0.85rem;">
-          <span class="unit-addon">m</span>
+      <div class="grid-3">
+        <div class="form-group" style="margin-bottom:0;">
+          <label for="marginL" style="font-size:0.75rem;">长度余量 (加长)</label>
+          <div class="input-wrapper">
+            <input type="number" id="marginL" value="0.05" step="0.01" min="0" oninput="calculate()" style="height:36px; font-size:0.85rem;">
+            <span class="unit-addon">m</span>
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
+          <label for="marginD" style="font-size:0.75rem;">深度余量 (加深)</label>
+          <div class="input-wrapper">
+            <input type="number" id="marginD" value="0.05" step="0.01" min="0" oninput="calculate()" style="height:36px; font-size:0.85rem;">
+            <span class="unit-addon">m</span>
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
+          <label for="marginH" style="font-size:0.75rem;">高度余量 (加高)</label>
+          <div class="input-wrapper">
+            <input type="number" id="marginH" value="0.05" step="0.01" min="0" oninput="calculate()" style="height:36px; font-size:0.85rem;">
+            <span class="unit-addon">m</span>
+          </div>
         </div>
       </div>
     </div>
@@ -528,7 +562,7 @@
             <span id="resWeight">-</span>
             <span class="stat-unit">kg</span>
           </div>
-          <div class="stat-sub">含型材+配件+面料</div>
+          <div class="stat-sub">含产品净重 + 包装箱重</div>
         </div>
       </div>
 
@@ -555,12 +589,12 @@
 
 <script>
 /**
- * 结构化产品数据库 (支持后期无缝扩展新产品品类或自定义计算逻辑)
+ * 结构化产品数据库
  */
 const PRODUCT_CONFIG = {
   "卷帘": {
     codePrefix: "A",
-    fabricLayerMultiplier: 1, // 单层面料
+    fabricLayerMultiplier: 1,
     models: [
       { id: "A01", depth: 0.062, height: 0.084, profileWeight: 0.7, accWeight: 0.8 },
       { id: "A02", depth: 0.075, height: 0.080, profileWeight: 1.3, accWeight: 0.8 },
@@ -573,7 +607,7 @@ const PRODUCT_CONFIG = {
   },
   "斑马帘": {
     codePrefix: "B",
-    fabricLayerMultiplier: 2, // 斑马帘两层面料
+    fabricLayerMultiplier: 2,
     models: [
       { id: "B02", depth: 0.075, height: 0.080, profileWeight: 1.4, accWeight: 0.8 },
       { id: "B03", depth: 0.065, height: 0.085, profileWeight: 1.6, accWeight: 0.8 },
@@ -583,7 +617,7 @@ const PRODUCT_CONFIG = {
   },
   "香格里拉帘": {
     codePrefix: "C",
-    fabricLayerMultiplier: 1, // 香格里拉帘
+    fabricLayerMultiplier: 1,
     models: [
       { id: "C02", depth: 0.075, height: 0.080, profileWeight: 1.3, accWeight: 0.8 },
       { id: "C03", depth: 0.065, height: 0.085, profileWeight: 1.5, accWeight: 0.8 },
@@ -664,7 +698,7 @@ function toggleMarginSetting() {
   box.style.display = isShown ? "none" : "block";
 }
 
-// 核心计算逻辑
+// 核心计算逻辑 (包含包装箱重)
 function calculate() {
   const cat = document.getElementById("categorySelect").value;
   const modelId = document.getElementById("modelSelect").value;
@@ -676,12 +710,17 @@ function calculate() {
   const w = parseFloat(document.getElementById("width").value) || 0;
   const h = parseFloat(document.getElementById("height").value) || 0;
   const gsm = parseFloat(document.getElementById("fabricGsm").value) || 0;
-  const margin = parseFloat(document.getElementById("marginInput").value) || 0.05;
+  const boxPerMeterW = parseFloat(document.getElementById("boxPerMeterWeight").value) || 0;
+  
+  // 分别读取长、深、高的独立余量
+  const marginL = parseFloat(document.getElementById("marginL").value) || 0;
+  const marginD = parseFloat(document.getElementById("marginD").value) || 0;
+  const marginH = parseFloat(document.getElementById("marginH").value) || 0;
 
   // 尺寸与体积 (米)
-  const boxL = w + margin;
-  const boxD = model.depth + margin;
-  const boxH = model.height + margin;
+  const boxL = w + marginL;
+  const boxD = model.depth + marginD;
+  const boxH = model.height + marginH;
   const volume = boxL * boxD * boxH;
 
   // 重量拆解 (kg)
@@ -689,16 +728,21 @@ function calculate() {
   const profileWeight = model.profileWeight * w;
   const accWeight = model.accWeight;
   const fabricWeight = (gsm / 1000) * w * h * layer;
-  const totalWeight = profileWeight + accWeight + fabricWeight;
+  // 包装箱重量 = 打包箱长(m) * 包装箱每米重(kg/m)
+  const boxWeight = boxL * boxPerMeterW;
+  
+  // 产品净重与打包总毛重
+  const productNetWeight = profileWeight + accWeight + fabricWeight;
+  const totalGrossWeight = productNetWeight + boxWeight;
 
   // 渲染结果
   document.getElementById("resDims").textContent = `${boxL.toFixed(2)} × ${boxD.toFixed(3)} × ${boxH.toFixed(3)} m`;
   document.getElementById("resDimsMm").textContent = `外箱尺寸 (mm)：${Math.round(boxL * 1000)} × ${Math.round(boxD * 1000)} × ${Math.round(boxH * 1000)} mm`;
   document.getElementById("resVol").textContent = volume.toFixed(4);
-  document.getElementById("resWeight").textContent = totalWeight.toFixed(2);
+  document.getElementById("resWeight").textContent = totalGrossWeight.toFixed(2);
   
   document.getElementById("resBreakdown").textContent = 
-    `型材 ${profileWeight.toFixed(2)}kg + 配件 ${accWeight.toFixed(1)}kg + 面料 ${fabricWeight.toFixed(2)}kg`;
+    `产品净重 ${productNetWeight.toFixed(2)}kg (型材${profileWeight.toFixed(2)}+配件${accWeight.toFixed(1)}+面料${fabricWeight.toFixed(2)}) + 箱重 ${boxWeight.toFixed(2)}kg`;
 }
 
 // 复制结果
@@ -708,25 +752,18 @@ function copyResult() {
   const w = document.getElementById("width").value;
   const h = document.getElementById("height").value;
   const gsm = document.getElementById("fabricGsm").value;
+  const boxPerM = document.getElementById("boxPerMeterWeight").value;
   const dims = document.getElementById("resDims").textContent;
   const dimsMm = document.getElementById("resDimsMm").textContent.replace("外箱尺寸 (mm)：", "");
   const vol = document.getElementById("resVol").textContent;
   const totalW = document.getElementById("resWeight").textContent;
   const breakdown = document.getElementById("resBreakdown").textContent;
 
-  const text = `【产品打包与物流信息】
-产品品类：${cat} (${modelId} 型号)
-定制尺寸：宽 ${w}m × 高 ${h}m (面料: ${gsm}g/㎡)
---------------------
-📦 外箱尺寸：${dims} (${dimsMm})
-📦 外箱体积：${vol} m³
-⚖️ 打包总重：${totalW} kg
-(明细: ${breakdown})`;
+  const text = `【产品打包与物流信息】\n产品品类：${cat} (${modelId} 型号)\n定制尺寸：宽 ${w}m × 高 ${h}m (面料: ${gsm}g/㎡)\n包装箱重：${boxPerM} kg/m\n--------------------\n📦 外箱尺寸：${dims} (${dimsMm})\n📦 外箱体积：${vol} m³\n⚖️ 打包总毛重：${totalW} kg\n(明细: ${breakdown})`;
 
   navigator.clipboard.writeText(text).then(() => {
     showToast();
   }).catch(() => {
-    // 兼容不支持 clipboard api 的老环境
     const ta = document.createElement("textarea");
     ta.value = text;
     document.body.appendChild(ta);
