@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>开合帘与梦幻帘打包测算工具 - ilvia</title>
+  <style>
+    :root {
+      --primary: #8b5cf6;
+      --primary-hover: #7c3aed;
+      --primary-light: #f5f3ff;
+      --accent: #a78bfa;
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --border-focus: #c4b5fd;
+      --warning: #f59e0b;
+      --warning-bg: #fffbeb;
+      --success: #10b981;
+      --radius-lg: 16px;
+      --radius-md: 10px;
+      --radius-sm: 6px;
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.08), 0 2px 6px -2px rgba(15, 23, 42, 0.04);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text-main);
+      min-height: 100vh;
+      padding: 16px 12px;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+
+    .app-container {
+      width: 100%;
+      max-width: 580px;
+      background: var(--card);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+      border: 1px solid rgba(226, 232, 240, 0.8);
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+
+    .app-header {
+      background: linear-gradient(135deg, #4c1d95 0%, #0f172a 100%);
+      color: #ffffff;
+      padding: 20px 20px 18px;
+      position: relative;
+    }
+    .header-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      padding: 3px 8px;
+      border-radius: 20px;
+      margin-bottom: 8px;
+      color: #c4b5fd;
+    }
+    .app-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .app-subtitle {
+      font-size: 0.8rem;
+      color: #94a3b8;
+      margin-top: 4px;
+    }
+
+    .app-body {
+      padding: 18px 18px 22px;
+    }
+
+    .section-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .section-label::before {
+      content: "";
+      display: inline-block;
+      width: 4px;
+      height: 12px;
+      background: var(--primary);
+      border-radius: 2px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .form-group {
+      margin-bottom: 14px;
+      position: relative;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #334155;
+      margin-bottom: 6px;
+    }
+
+    .input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    select, input[type="number"] {
+      width: 100%;
+      height: 42px;
+      padding: 8px 12px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-md);
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: var(--text-main);
+      background-color: #ffffff;
+      outline: none;
+      transition: all 0.2s ease;
+      -moz-appearance: none;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      background-size: 16px;
+      padding-right: 32px;
+      cursor: pointer;
+    }
+
+    select:focus, input[type="number"]:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
+    }
+
+    .unit-addon {
+      position: absolute;
+      right: 12px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+
+    .spec-preview-card {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 10px 12px;
+      margin-bottom: 14px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      text-align: center;
+    }
+    .spec-item-title { font-size: 0.7rem; color: var(--text-muted); margin-bottom: 2px; }
+    .spec-item-value { font-size: 0.85rem; font-weight: 700; color: #1e293b; }
+
+    .chip-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 6px;
+      margin-bottom: 14px;
+    }
+    .chip {
+      font-size: 0.75rem;
+      padding: 4px 10px;
+      border-radius: 20px;
+      background: #f1f5f9;
+      color: #475569;
+      border: 1px solid #e2e8f0;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.15s;
+    }
+    .chip:hover, .chip.active {
+      background: var(--primary-light);
+      border-color: var(--border-focus);
+      color: var(--primary);
+      font-weight: 600;
+    }
+
+    .pkg-summary-header {
+      background: #ffffff;
+      border: 1.5px solid var(--primary);
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+      text-align: center;
+      margin-bottom: 12px;
+    }
+    .sum-title { font-size: 0.68rem; color: var(--text-muted); font-weight: 600; margin-bottom: 2px; }
+    .sum-val { font-size: 1.15rem; font-weight: 800; color: #1e293b; }
+
+    .pkg-card {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+      margin-bottom: 10px;
+      box-shadow: var(--shadow-sm);
+    }
+    .pkg-card.track-theme { border-left: 4px solid #8b5cf6; }
+    .pkg-card.fabric-theme { border-left: 4px solid #ec4899; }
+
+    .pkg-card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+      padding-bottom: 6px;
+      border-bottom: 1px dashed #e2e8f0;
+    }
+    .pkg-badge {
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 12px;
+    }
+    .badge-track { background: #ede9fe; color: #6d28d9; }
+    .badge-fabric { background: #fce7f3; color: #be185d; }
+
+    .pkg-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px 12px;
+      font-size: 0.78rem;
+      color: #334155;
+    }
+
+    .pkg-desc {
+      font-size: 0.73rem;
+      color: #64748b;
+      background: #f8fafc;
+      padding: 6px 8px;
+      border-radius: 4px;
+      margin-top: 6px;
+      line-height: 1.4;
+    }
+
+    .btn-copy {
+      width: 100%;
+      height: 46px;
+      background: var(--primary);
+      color: #ffffff;
+      border: none;
+      border-radius: var(--radius-md);
+      font-size: 0.95rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(139, 92, 246, 0.25);
+      transition: all 0.2s ease;
+      margin-top: 10px;
+    }
+    .btn-copy:hover {
+      background: var(--primary-hover);
+      box-shadow: 0 6px 14px rgba(139, 92, 246, 0.3);
+      transform: translateY(-1px);
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: rgba(15, 23, 42, 0.92);
+      backdrop-filter: blur(8px);
+      color: #ffffff;
+      padding: 10px 18px;
+      border-radius: 30px;
+      font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      z-index: 9999;
+      pointer-events: none;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    @media (max-width: 480px) {
+      body { padding: 8px 6px; }
+      .app-container { border-radius: 12px; }
+      .app-header { padding: 16px 14px; }
+      .app-body { padding: 14px; }
+      .pkg-grid { grid-template-columns: 1fr; }
+      .pkg-summary-header { grid-template-columns: 1fr; gap: 4px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="app-container">
+  <!-- Header -->
+  <div class="app-header">
+    <div class="header-badge">✨ 软装布艺专属分包 v2.1</div>
+    <h1 class="app-title">开合帘 / 梦幻帘打包计算器</h1>
+    <div class="app-subtitle">H01~H06 / M1~M4 真实机构适配 · 轨道等分裁切与布艺分箱</div>
+  </div>
+
+  <!-- Body -->
+  <div class="app-body">
+    <!-- 产品品类与型号 -->
+    <div class="section-label">1. 选择产品品类与机构型号</div>
+    <div class="grid-2">
+      <div class="form-group">
+        <label for="categorySelect">产品品类</label>
+        <select id="categorySelect" onchange="onCategoryChange()">
+          <option value="开合帘">开合帘</option>
+          <option value="梦幻帘">梦幻帘</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="modelSelect">机构型号</label>
+        <select id="modelSelect" onchange="onModelChange()"></select>
+      </div>
+    </div>
+
+    <!-- 机构参数卡片 -->
+    <div class="spec-preview-card">
+      <div>
+        <div class="spec-item-title">机构深度</div>
+        <div class="spec-item-value" id="specDepth">-</div>
+      </div>
+      <div>
+        <div class="spec-item-title">机构高度</div>
+        <div class="spec-item-value" id="specHeight">-</div>
+      </div>
+      <div>
+        <div class="spec-item-title">型材米重</div>
+        <div class="spec-item-value" id="specProfile">-</div>
+      </div>
+      <div>
+        <div class="spec-item-title">固定配件</div>
+        <div class="spec-item-value" id="specAcc">-</div>
+      </div>
+    </div>
+
+    <div class="section-label">2. 制作尺寸与裁切限长</div>
+    <div class="grid-2">
+      <div class="form-group">
+        <label for="width">制作宽度 (W)</label>
+        <div class="input-wrapper">
+          <input type="number" id="width" value="6.00" step="0.01" min="0.5" max="30" oninput="calculate()">
+          <span class="unit-addon">m</span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="height">制作高度 (H)</label>
+        <div class="input-wrapper">
+          <input type="number" id="height" value="2.80" step="0.01" min="0.5" max="10" oninput="calculate()">
+          <span class="unit-addon">m</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="form-group">
+        <label for="maxLimitLength">期望轨道单件最长不超过</label>
+        <div class="input-wrapper">
+          <input type="number" id="maxLimitLength" value="3.00" step="0.1" min="1.0" max="15" oninput="calculate()">
+          <span class="unit-addon">m</span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="fabricGsm">面料克重</label>
+        <div class="input-wrapper">
+          <input type="number" id="fabricGsm" value="380" step="10" min="0" oninput="calculate()">
+          <span class="unit-addon">g/m²</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 快捷克重 -->
+    <div class="chip-group" id="chipBox"></div>
+
+    <!-- 结果面板 -->
+    <div class="section-label">3. 打包结果汇总与分包清单</div>
+    
+    <div class="pkg-summary-header">
+      <div>
+        <div class="sum-title">整单包裹总数</div>
+        <div class="sum-val" id="resTotalPkgs" style="color:var(--primary);">-</div>
+      </div>
+      <div>
+        <div class="sum-title">发货总体积</div>
+        <div class="sum-val" id="resTotalVol">-</div>
+      </div>
+      <div>
+        <div class="sum-title">发货总毛重</div>
+        <div class="sum-val" id="resTotalWeight" style="color:#059669;">-</div>
+      </div>
+    </div>
+
+    <div id="pkgDetailsList"></div>
+
+    <button class="btn-copy" onclick="copyResult()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      一键复制整单发货分包明细发给物流
+    </button>
+  </div>
+</div>
+
+<div id="toast" class="toast">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+  <span>开合帘/梦幻帘打包明细已复制到剪贴板！</span>
+</div>
+
+<script>
+const DRAPE_DB = {
+  "开合帘": {
+    chips: [{ l: "轻质透光 220g", v: 220 }, { l: "标准遮光 380g", v: 380 }, { l: "加厚雪尼尔 500g", v: 500 }, { l: "高精密 650g", v: 650 }],
+    models: [
+      { id: "H01", d: 0.095, h: 0.125, pw: 0.90, aw: 1.0 },
+      { id: "H02", d: 0.040, h: 0.030, pw: 0.70, aw: 1.0 },
+      { id: "H03", d: 0.040, h: 0.030, pw: 0.70, aw: 1.0 },
+      { id: "H04", d: 0.040, h: 0.030, pw: 0.70, aw: 1.0 },
+      { id: "H05", d: 0.040, h: 0.030, pw: 0.70, aw: 1.0 },
+      { id: "H06", d: 0.040, h: 0.030, pw: 0.70, aw: 0.5 }
+    ]
+  },
+  "梦幻帘": {
+    chips: [{ l: "轻柔纱质 180g", v: 180 }, { l: "标准梦幻 260g", v: 260 }, { l: "加厚提花 360g", v: 360 }],
+    models: [
+      { id: "M1", d: 0.095, h: 0.125, pw: 1.33, aw: 1.0 },
+      { id: "M2", d: 0.095, h: 0.125, pw: 1.33, aw: 1.0 },
+      { id: "M3", d: 0.095, h: 0.125, pw: 0.80, aw: 1.0 },
+      { id: "M4", d: 0.095, h: 0.125, pw: 0.80, aw: 0.5 }
+    ]
+  }
+};
+
+const TRACK_BOXES = [
+  { id: "BOX_10_10", name: "10×10cm", w: 0.10, h: 0.10, pw: 0.45 },
+  { id: "BOX_10_20", name: "10×20cm", w: 0.10, h: 0.20, pw: 0.58 },
+  { id: "BOX_10_30", name: "10×30cm", w: 0.10, h: 0.30, pw: 0.80 },
+  { id: "BOX_20_20", name: "20×20cm", w: 0.20, h: 0.20, pw: 0.80 },
+  { id: "BOX_20_30", name: "20×30cm", w: 0.20, h: 0.30, pw: 0.95 }
+];
+
+function onCategoryChange() {
+  const cat = document.getElementById("categorySelect").value;
+  const modSel = document.getElementById("modelSelect");
+  modSel.innerHTML = "";
+  
+  DRAPE_DB[cat].models.forEach(m => {
+    const opt = document.createElement("option");
+    opt.value = m.id;
+    opt.textContent = `${m.id} 型号`;
+    modSel.appendChild(opt);
+  });
+
+  const cBox = document.getElementById("chipBox");
+  cBox.innerHTML = "";
+  DRAPE_DB[cat].chips.forEach((c, idx) => {
+    const span = document.createElement("span");
+    span.className = `chip ${idx === 1 ? 'active' : ''}`;
+    span.textContent = c.l;
+    span.onclick = () => {
+      document.querySelectorAll(".chip").forEach(x => x.classList.remove("active"));
+      span.classList.add("active");
+      document.getElementById("fabricGsm").value = c.v;
+      calculate();
+    };
+    cBox.appendChild(span);
+  });
+  document.getElementById("fabricGsm").value = DRAPE_DB[cat].chips[1].v;
+
+  onModelChange();
+}
+
+function onModelChange() {
+  const cat = document.getElementById("categorySelect").value;
+  const mid = document.getElementById("modelSelect").value;
+  const model = DRAPE_DB[cat].models.find(m => m.id === mid);
+
+  if (model) {
+    document.getElementById("specDepth").textContent = `${Math.round(model.d * 1000)}mm`;
+    document.getElementById("specHeight").textContent = `${Math.round(model.h * 1000)}mm`;
+    document.getElementById("specProfile").textContent = `${model.pw}kg/m`;
+    document.getElementById("specAcc").textContent = `${model.aw}kg`;
+  }
+  calculate();
+}
+
+function fitTrackBox(model, segmentsCount) {
+  const reqW1 = model.d;
+  const reqH1 = model.h * segmentsCount;
+
+  const cols = Math.min(2, segmentsCount);
+  const rows = Math.ceil(segmentsCount / cols);
+  const reqW2 = model.d * cols;
+  const reqH2 = model.h * rows;
+
+  const orients = [
+    { w: reqW1, h: reqH1 },
+    { w: reqW2, h: reqH2 }
+  ];
+
+  function fit(rw, rh, bw, bh) {
+    return ((rw <= bw + 0.005) && (rh <= bh + 0.005)) || ((rw <= bh + 0.005) && (rh <= bw + 0.005));
+  }
+
+  for (let box of TRACK_BOXES) {
+    for (let o of orients) {
+      if (fit(o.w, o.h, box.w, box.h)) return box;
+    }
+  }
+  return TRACK_BOXES[TRACK_BOXES.length - 1];
+}
+
+function calculate() {
+  const cat = document.getElementById("categorySelect").value;
+  const mid = document.getElementById("modelSelect").value;
+  const model = DRAPE_DB[cat].models.find(m => m.id === mid);
+  if (!model) return;
+
+  const w = parseFloat(document.getElementById("width").value) || 0;
+  const h = parseFloat(document.getElementById("height").value) || 0;
+  const maxLimit = parseFloat(document.getElementById("maxLimitLength").value) || 3.0;
+  const gsm = parseFloat(document.getElementById("fabricGsm").value) || 0;
+
+  if (w <= 0 || h <= 0) return;
+
+  const container = document.getElementById("pkgDetailsList");
+  container.innerHTML = "";
+  const packageList = [];
+
+  // =========================================================
+  // 1. 包裹 1：电动轨道系统打包
+  // =========================================================
+  let segments = 1;
+  if (w > maxLimit && maxLimit > 0) {
+    segments = Math.ceil(w / maxLimit);
+  }
+  const segmentLen = w / segments;
+  const trackBoxL = segmentLen + 0.05;
+  const matchedTrackBox = fitTrackBox(model, segments);
+  const trackBoxVol = trackBoxL * matchedTrackBox.w * matchedTrackBox.h;
+
+  const trackProfileW = model.pw * w;
+  const motorAccW = model.aw;
+  const trackBoxWeight = trackBoxL * matchedTrackBox.pw;
+  const trackPkgTotalW = trackProfileW + motorAccW + trackBoxWeight;
+
+  packageList.push({
+    name: `包裹 1：${cat}轨道系统 (${mid} 型号)`,
+    badge: "包裹 1 · 轨道箱",
+    badgeClass: "badge-track",
+    themeClass: "track-theme",
+    boxName: `${matchedTrackBox.name} 成品箱`,
+    dims: `${trackBoxL.toFixed(2)} × ${matchedTrackBox.w.toFixed(2)} × ${matchedTrackBox.h.toFixed(2)} m`,
+    dimsMm: `${Math.round(trackBoxL*1000)} × ${Math.round(matchedTrackBox.w*1000)} × ${Math.round(matchedTrackBox.h*1000)} mm`,
+    vol: trackBoxVol,
+    grossWeight: trackPkgTotalW,
+    desc: `• <strong>分段裁切：</strong>定制宽度 ${w.toFixed(2)}m (限制单根 $\\le${maxLimit.toFixed(1)}$m) $\\rightarrow$ 等分裁切为 <strong>${segments} 段</strong>，每段长 ${segmentLen.toFixed(2)}m。<br>` +
+          `• <strong>堆叠装箱：</strong>${segments} 段型材 (${Math.round(model.d*1000)}×${Math.round(model.h*1000)}mm) 堆叠装入 <strong>${matchedTrackBox.name}</strong> 箱 (箱长 ${trackBoxL.toFixed(2)}m)。<br>` +
+          `• <strong>重量明细：</strong>型材重 ${trackProfileW.toFixed(2)}kg + 固定配件 ${motorAccW.toFixed(1)}kg + 纸箱重 ${trackBoxWeight.toFixed(2)}kg = <strong>${trackPkgTotalW.toFixed(2)}kg</strong>。`
+  });
+
+  // =========================================================
+  // 2. 包裹 2：布艺面料专用箱分包
+  // =========================================================
+  const productArea = w * h;
+  let actualFabricArea = 0;
+  let totalFabricWeight = 0;
+
+  if (cat === "开合帘") {
+    actualFabricArea = productArea * 2.2;
+    totalFabricWeight = (gsm / 1000) * actualFabricArea;
+
+    const boxCapacity = 20.0;
+    const fabricBoxCount = Math.ceil(actualFabricArea / boxCapacity) || 1;
+    const boxL = 0.60, boxW = 0.50, boxH = 0.40;
+    const singleBoxVol = boxL * boxW * boxH;
+    const singleBoxWgt = 1.70;
+
+    const avgFabricWPerBox = totalFabricWeight / fabricBoxCount;
+    const singlePkgGrossW = avgFabricWPerBox + singleBoxWgt;
+
+    for (let i = 1; i <= fabricBoxCount; i++) {
+      packageList.push({
+        name: fabricBoxCount === 1 ? "包裹 2：开合帘布艺面料专用箱" : `包裹 ${i + 1}：开合帘布艺面料专用箱 (${i}/${fabricBoxCount})`,
+        badge: `包裹 ${i + 1} · 面料箱`,
+        badgeClass: "badge-fabric",
+        themeClass: "fabric-theme",
+        boxName: "60×50×40cm 开合帘专用箱",
+        dims: `${boxL.toFixed(2)} × ${boxW.toFixed(2)} × ${boxH.toFixed(2)} m`,
+        dimsMm: `600 × 500 × 400 mm`,
+        vol: singleBoxVol,
+        grossWeight: singlePkgGrossW,
+        desc: `• <strong>用料计算：</strong>制作面积 ${productArea.toFixed(2)}㎡ $\\times$ 2.2倍褶皱 = 实际展开用料 <strong>${actualFabricArea.toFixed(2)}㎡</strong>。<br>` +
+              `• <strong>分箱规则：</strong>单箱容纳 20㎡，共分为 <strong>${fabricBoxCount} 个面料包裹</strong>。<br>` +
+              `• <strong>重量明细：</strong>单箱面料约 ${avgFabricWPerBox.toFixed(2)}kg + 纸箱 1.70kg = <strong>${singlePkgGrossW.toFixed(2)}kg</strong>。`
+      });
+    }
+
+  } else {
+    actualFabricArea = productArea;
+    totalFabricWeight = (gsm / 1000) * actualFabricArea;
+
+    if (actualFabricArea <= 10.0) {
+      const boxL = 0.44, boxW = 0.29, boxH = 0.29;
+      const boxVol = boxL * boxW * boxH;
+      const boxWgt = 0.60;
+      const pkgGrossW = totalFabricWeight + boxWgt;
+
+      packageList.push({
+        name: "包裹 2：梦幻帘面料专用箱 (小箱)",
+        badge: "包裹 2 · 梦幻小箱",
+        badgeClass: "badge-fabric",
+        themeClass: "fabric-theme",
+        boxName: "44×29×29cm 梦幻帘小箱",
+        dims: `${boxL.toFixed(2)} × ${boxW.toFixed(2)} × ${boxH.toFixed(2)} m`,
+        dimsMm: `440 × 290 × 290 mm`,
+        vol: boxVol,
+        grossWeight: pkgGrossW,
+        desc: `• <strong>用料计算：</strong>梦幻帘用料面积 <strong>${actualFabricArea.toFixed(2)}㎡</strong> ($\\le 10㎡$)。<br>` +
+              `• <strong>选用箱规：</strong>44×29×29cm 梦幻小箱 (箱重 0.60kg)。<br>` +
+              `• <strong>重量明细：</strong>面料净重 ${totalFabricWeight.toFixed(2)}kg + 纸箱 0.60kg = <strong>${pkgGrossW.toFixed(2)}kg</strong>。`
+      });
+
+    } else if (actualFabricArea <= 20.0) {
+      const boxL = 0.44, boxW = 0.44, boxH = 0.36;
+      const boxVol = boxL * boxW * boxH;
+      const boxWgt = 0.90;
+      const pkgGrossW = totalFabricWeight + boxWgt;
+
+      packageList.push({
+        name: "包裹 2：梦幻帘面料专用箱 (大箱)",
+        badge: "包裹 2 · 梦幻大箱",
+        badgeClass: "badge-fabric",
+        themeClass: "fabric-theme",
+        boxName: "44×44×36cm 梦幻帘大箱",
+        dims: `${boxL.toFixed(2)} × ${boxW.toFixed(2)} × ${boxH.toFixed(2)} m`,
+        dimsMm: `440 × 440 × 360 mm`,
+        vol: boxVol,
+        grossWeight: pkgGrossW,
+        desc: `• <strong>用料计算：</strong>梦幻帘用料面积 <strong>${actualFabricArea.toFixed(2)}㎡</strong> (10㎡~20㎡)。<br>` +
+              `• <strong>选用箱规：</strong>44×44×36cm 梦幻大箱 (箱重 0.90kg)。<br>` +
+              `• <strong>重量明细：</strong>面料净重 ${totalFabricWeight.toFixed(2)}kg + 纸箱 0.90kg = <strong>${pkgGrossW.toFixed(2)}kg</strong>。`
+      });
+
+    } else {
+      const dreamBoxCount = Math.ceil(actualFabricArea / 20.0);
+      const boxL = 0.44, boxW = 0.44, boxH = 0.36;
+      const boxVol = boxL * boxW * boxH;
+      const boxWgt = 0.90;
+      const avgWgtPerBox = totalFabricWeight / dreamBoxCount;
+      const pkgGrossW = avgWgtPerBox + boxWgt;
+
+      for (let i = 1; i <= dreamBoxCount; i++) {
+        packageList.push({
+          name: `包裹 ${i + 1}：梦幻帘面料专用箱 (${i}/${dreamBoxCount})`,
+          badge: `包裹 ${i + 1} · 梦幻大箱`,
+          badgeClass: "badge-fabric",
+          themeClass: "fabric-theme",
+          boxName: "44×44×36cm 梦幻帘大箱",
+          dims: `${boxL.toFixed(2)} × ${boxW.toFixed(2)} × ${boxH.toFixed(2)} m`,
+          dimsMm: `440 × 440 × 360 mm`,
+          vol: boxVol,
+          grossWeight: pkgGrossW,
+          desc: `• <strong>用料计算：</strong>梦幻帘用料面积 <strong>${actualFabricArea.toFixed(2)}㎡</strong> ($>20㎡$)，分为 ${dreamBoxCount} 个大箱。<br>` +
+                `• <strong>选用箱规：</strong>44×44×36cm 梦幻大箱 (箱重 0.90kg)。<br>` +
+                `• <strong>重量明细：</strong>单箱面料 ${avgWgtPerBox.toFixed(2)}kg + 纸箱 0.90kg = <strong>${pkgGrossW.toFixed(2)}kg</strong>。`
+        });
+      }
+    }
+  }
+
+  // =========================================================
+  // 3. 汇总渲染
+  // =========================================================
+  let grandTotalVol = 0;
+  let grandTotalWeight = 0;
+
+  packageList.forEach(pkg => {
+    grandTotalVol += pkg.vol;
+    grandTotalWeight += pkg.grossWeight;
+
+    const card = document.createElement("div");
+    card.className = `pkg-card ${pkg.themeClass}`;
+    card.innerHTML = `
+      <div class="pkg-card-top">
+        <strong style="font-size:0.85rem; color:#0f172a;">${pkg.name}</strong>
+        <span class="pkg-badge ${pkg.badgeClass}">${pkg.badge}</span>
+      </div>
+      <div class="pkg-grid">
+        <div><strong>选用箱规：</strong>${pkg.boxName}</div>
+        <div><strong>包裹毛重：</strong><span style="color:#059669; font-weight:700;">${pkg.grossWeight.toFixed(2)} kg</span></div>
+        <div><strong>外箱尺寸：</strong>${pkg.dimsMm}</div>
+        <div><strong>计费体积：</strong>${pkg.vol.toFixed(4)} m³</div>
+      </div>
+      <div class="pkg-desc">${pkg.desc}</div>
+    `;
+    container.appendChild(card);
+  });
+
+  document.getElementById("resTotalPkgs").textContent = `${packageList.length} 个包裹`;
+  document.getElementById("resTotalVol").textContent = `${grandTotalVol.toFixed(4)} m³`;
+  document.getElementById("resTotalWeight").textContent = `${grandTotalWeight.toFixed(2)} kg`;
+
+  window.lastDrapePackages = packageList;
+  window.lastDrapeGrandVol = grandTotalVol;
+  window.lastDrapeGrandWeight = grandTotalWeight;
+  window.lastDrapeCat = cat;
+  window.lastDrapeMid = mid;
+  window.lastDrapeW = w;
+  window.lastDrapeH = h;
+}
+
+function copyResult() {
+  const pkgs = window.lastDrapePackages;
+  if (!pkgs || pkgs.length === 0) {
+    alert("请先录入尺寸数据！");
+    return;
+  }
+
+  let detail = "";
+  pkgs.forEach((p) => {
+    detail += `\n【${p.name}】\n  • 选用箱规：${p.boxName} (${p.dimsMm})\n  • 包裹毛重：${p.grossWeight.toFixed(2)} kg (计费体积: ${p.vol.toFixed(4)} m³)\n`;
+  });
+
+  const text = `【${window.lastDrapeCat}(${window.lastDrapeMid})发货打包明细】\n定制尺寸：宽 ${window.lastDrapeW}m × 高 ${window.lastDrapeH}m\n打包总数：共 ${pkgs.length} 个独立包裹\n整单发货总毛重：${window.lastDrapeGrandWeight.toFixed(2)} kg\n整单发货总体积：${window.lastDrapeGrandVol.toFixed(4)} m³\n--------------------${detail}`;
+
+  navigator.clipboard.writeText(text).then(() => {
+    showToast();
+  }).catch(() => {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand("copy");
+    document.body.removeChild(ta);
+    showToast();
+  });
+}
+
+function showToast() {
+  const toast = document.getElementById("toast");
+  toast.classList.add("show");
+  setTimeout(() => {
+    toast.classList.remove("show");
+  }, 2200);
+}
+
+window.onload = onCategoryChange;
+</script>
+</body>
+</html>
