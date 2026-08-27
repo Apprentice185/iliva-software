@@ -1,0 +1,1476 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>ilvia 运泉智能遮阳 · 物流与打包工作台</title>
+  <style>
+    :root {
+      --primary: #2563eb;
+      --bg: #0f172a;
+      --card-bg: #ffffff;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --radius-lg: 16px;
+      --radius-md: 10px;
+      --radius-sm: 6px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: #f8fafc;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 12px 8px 40px;
+    }
+
+    .workbench-container {
+      width: 100%;
+      max-width: 680px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .top-bar {
+      background: rgba(30, 41, 59, 0.9);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: var(--radius-lg);
+      padding: 10px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .brand-title {
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .cart-btn {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: #ffffff;
+      border: none;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
+      transition: transform 0.15s;
+    }
+    .cart-btn:active { transform: scale(0.96); }
+
+    .tab-nav {
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 3px;
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 3px;
+    }
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      padding: 9px 2px;
+      border-radius: 8px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s;
+    }
+    .tab-btn.active {
+      background: #ffffff;
+      color: #0f172a;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+    .tab-btn.active.t1 { color: #2563eb; }
+    .tab-btn.active.t2 { color: #0d9488; }
+    .tab-btn.active.t3 { color: #8b5cf6; }
+    .tab-btn.active.t4 { color: #0284c7; }
+    .tab-btn.active.t5 { color: #10b981; }
+
+    .tab-view { display: none; width: 100%; }
+    .tab-view.active { display: block; }
+
+    .calc-card {
+      background: var(--card-bg);
+      color: var(--text-main);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.25);
+    }
+    .card-header-bar {
+      padding: 14px 16px;
+      color: #ffffff;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .card-header-bar.h-roller { background: linear-gradient(135deg, #1e3a8a 0%, #1e293b 100%); }
+    .card-header-bar.h-fold { background: linear-gradient(135deg, #115e59 0%, #0f172a 100%); }
+    .card-header-bar.h-drape { background: linear-gradient(135deg, #4c1d95 0%, #0f172a 100%); }
+    .card-header-bar.h-zip { background: linear-gradient(135deg, #0c4a6e 0%, #0f172a 100%); }
+    .card-header-bar.h-stack { background: linear-gradient(135deg, #064e3b 0%, #0f172a 100%); }
+
+    .card-body { padding: 16px 14px 18px; }
+
+    .section-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .section-label::before {
+      content: "";
+      display: inline-block;
+      width: 3.5px;
+      height: 11px;
+      background: var(--primary);
+      border-radius: 2px;
+    }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    .form-group { margin-bottom: 12px; position: relative; }
+    .form-group label { display: block; font-size: 0.78rem; font-weight: 600; color: #334155; margin-bottom: 5px; }
+
+    .input-wrapper { position: relative; display: flex; align-items: center; }
+    select, input[type="number"], input[type="text"] {
+      width: 100%;
+      height: 38px;
+      padding: 6px 10px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-md);
+      font-size: 0.88rem;
+      font-weight: 500;
+      color: var(--text-main);
+      background-color: #ffffff;
+      outline: none;
+      transition: all 0.2s;
+    }
+    select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      background-size: 14px;
+      padding-right: 28px;
+      cursor: pointer;
+    }
+    select:focus, input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12); }
+    .unit-addon { position: absolute; right: 10px; font-size: 0.75rem; color: var(--text-muted); pointer-events: none; }
+
+    .spec-preview-card {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 8px;
+      margin-bottom: 12px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 4px;
+      text-align: center;
+    }
+    .spec-item-title { font-size: 0.65rem; color: var(--text-muted); margin-bottom: 2px; }
+    .spec-item-value { font-size: 0.8rem; font-weight: 700; color: #1e293b; }
+
+    .results-card {
+      background: #f8fafc;
+      border: 1.5px solid #cbd5e1;
+      border-radius: var(--radius-lg);
+      padding: 12px;
+      margin-top: 6px;
+    }
+    .results-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+    .stat-box { background: #ffffff; padding: 8px 10px; border-radius: var(--radius-md); border: 1px solid var(--border); }
+    .stat-box.full-width { grid-column: span 2; }
+    .stat-box.highlight { border-left: 3.5px solid var(--primary); }
+    .stat-title { font-size: 0.68rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; margin-bottom: 2px; }
+    .stat-main-num { font-size: 1.1rem; font-weight: 800; color: #0f172a; }
+    .stat-sub { font-size: 0.7rem; color: var(--text-muted); margin-top: 2px; }
+
+    .action-btn-row { display: grid; grid-template-columns: 1fr 1.2fr; gap: 8px; margin-top: 10px; }
+    .btn-action {
+      height: 40px;
+      border: none;
+      border-radius: var(--radius-md);
+      font-size: 0.82rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-copy-sub { background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; }
+    .btn-add-cart { background: #2563eb; color: #ffffff; }
+    .btn-add-cart:active { transform: scale(0.97); }
+
+    .cart-item-card {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 8px 10px;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.78rem;
+    }
+    .btn-del { color: #ef4444; background: none; border: none; cursor: pointer; font-size: 0.75rem; }
+
+    .pkg-card {
+      background: #ffffff;
+      border: 1.5px solid #cbd5e1;
+      border-left: 4px solid #10b981;
+      border-radius: var(--radius-md);
+      padding: 10px 12px;
+      margin-bottom: 8px;
+      font-size: 0.75rem;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: rgba(15, 23, 42, 0.94);
+      color: #ffffff;
+      padding: 10px 18px;
+      border-radius: 30px;
+      font-size: 0.82rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: transform 0.25s ease;
+      z-index: 9999;
+      pointer-events: none;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+
+<div class="workbench-container">
+  <div class="top-bar">
+    <div class="brand-title">📦 ilvia 打包工作台</div>
+    <button class="cart-btn" onclick="switchTab('stack')">
+      🛒 查看整单清单 (<span id="cartCountBadge">0</span>)
+    </button>
+  </div>
+
+  <div class="tab-nav">
+    <button class="tab-btn active t1" id="btn-roller" onclick="switchTab('roller')">卷轴系列</button>
+    <button class="tab-btn t2" id="btn-fold" onclick="switchTab('fold')">蜂巢罗马</button>
+    <button class="tab-btn t3" id="btn-drape" onclick="switchTab('drape')">开合梦幻</button>
+    <button class="tab-btn t4" id="btn-zip" onclick="switchTab('zip')">防风卷帘</button>
+    <button class="tab-btn t5" id="btn-stack" onclick="switchTab('stack')">堆叠分箱</button>
+  </div>
+
+  <!-- 1. 卷轴系列 -->
+  <div class="tab-view active" id="view-roller">
+    <div class="calc-card">
+      <div class="card-header-bar h-roller">
+        <div><strong>卷轴系列</strong> (卷帘 / 斑马 / 香格里拉)</div>
+        <span style="font-size:0.7rem; opacity:0.8;">单件独立 / 组合打包</span>
+      </div>
+      <div class="card-body">
+        <div class="section-label">1. 机构选型</div>
+        <div class="grid-2">
+          <div class="form-group">
+            <label for="r_cat">品类</label>
+            <select id="r_cat" onchange="r_onCatChange()"></select>
+          </div>
+          <div class="form-group">
+            <label for="r_model">机构型号</label>
+            <select id="r_model" onchange="r_onModelChange()"></select>
+          </div>
+        </div>
+
+        <div class="spec-preview-card">
+          <div><div class="spec-item-title">深度</div><div class="spec-item-value" id="r_specD">-</div></div>
+          <div><div class="spec-item-title">高度</div><div class="spec-item-value" id="r_specH">-</div></div>
+          <div><div class="spec-item-title">型材米重</div><div class="spec-item-value" id="r_specP">-</div></div>
+          <div><div class="spec-item-title">配件重量</div><div class="spec-item-value" id="r_specA">-</div></div>
+        </div>
+
+        <div class="section-label">2. 制作尺寸 (cm) 与面料参数</div>
+        <div class="grid-2">
+          <div class="form-group">
+            <label for="r_w">定制宽度 (W)</label>
+            <div class="input-wrapper"><input type="number" id="r_w" value="200" step="1" oninput="r_calc()"><span class="unit-addon">cm</span></div>
+          </div>
+          <div class="form-group">
+            <label for="r_h">定制高度 (H)</label>
+            <div class="input-wrapper"><input type="number" id="r_h" value="250" step="1" oninput="r_calc()"><span class="unit-addon">cm</span></div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="form-group">
+            <label for="r_fabricSelect">面料型号</label>
+            <select id="r_fabricSelect" onchange="onFabricSelectChange('r_cat', 'r_fabricSelect', 'r_gsm', r_calc)"></select>
+          </div>
+          <div class="form-group">
+            <label for="r_gsm">面料克重 (可直接修改)</label>
+            <div class="input-wrapper"><input type="number" id="r_gsm" value="240" step="10" oninput="r_calc()"><span class="unit-addon">g/m²</span></div>
+          </div>
+        </div>
+
+        <div class="results-card">
+          <div class="results-grid">
+            <div class="stat-box full-width highlight">
+              <div class="stat-title">单件推荐成品外箱规格 (长 × 宽 × 高)</div>
+              <div class="stat-main-num" id="r_resBoxDims">-</div>
+              <div class="stat-sub" id="r_resBoxDetail">-</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-title">单件打包总毛重</div>
+              <div class="stat-main-num" id="r_resGrossW" style="color:#2563eb;">-</div>
+              <div class="stat-sub" id="r_resNetW">净重: - kg</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-title">外箱总体积</div>
+              <div class="stat-main-num" id="r_resVol">-</div>
+              <div class="stat-sub">计费体积 (m³)</div>
+            </div>
+          </div>
+          <div class="action-btn-row">
+            <button class="btn-action btn-copy-sub" onclick="r_copy()">📋 复制单件打包信息</button>
+            <button class="btn-action btn-add-cart" onclick="r_addToCart()">➕ 加入整单堆叠清单</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. 蜂巢/罗马系列 -->
+  <div class="tab-view" id="view-fold">
+    <div class="calc-card">
+      <div class="card-header-bar h-fold">
+        <div><strong>蜂巢 / 罗马帘系列</strong></div>
+        <span style="font-size:0.7rem; opacity:0.8;">单件独立 / 组合打包</span>
+      </div>
+      <div class="card-body">
+        <div class="section-label">1. 机构选型</div>
+        <div class="grid-2">
+          <div class="form-group">
+            <label for="f_cat">品类</label>
+            <select id="f_cat" onchange="f_onCatChange()"></select>
+          </div>
+          <div class="form-group">
+            <label for="f_model">机构型号</label>
+            <select id="f_model" onchange="f_onModelChange()"></select>
+          </div>
+        </div>
+
+        <div class="spec-preview-card">
+          <div><div class="spec-item-title">深度</div><div class="spec-item-value" id="f_specD">-</div></div>
+          <div><div class="spec-item-title">基高</div><div class="spec-item-value" id="f_specH">-</div></div>
+          <div><div class="spec-item-title">型材米重</div><div class="spec-item-value" id="f_specP">-</div></div>
+          <div><div class="spec-item-title">配件重量</div><div class="spec-item-value" id="f_specA">-</div></div>
+        </div>
+
+        <div class="section-label">2. 制作尺寸 (cm) 与面料参数</div>
+        <div class="grid-2">
+          <div class="form-group">
+            <label for="f_w">定制宽度 (W)</label>
+            <div class="input-wrapper"><input type="number" id="f_w" value="180" step="1" oninput="f_calc()"><span class="unit-addon">cm</span></div>
+          </div>
+          <div class="form-group">
+            <label for="f_h">定制高度 (H)</label>
+            <div class="input-wrapper"><input type="number" id="f_h" value="220" step="1" oninput="f_calc()"><span class="unit-addon">cm</span></div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="form-group">
+            <label for="f_fabricSelect">面料型号</label>
+            <select id="f_fabricSelect" onchange="onFabricSelectChange('f_cat', 'f_fabricSelect', 'f_gsm', f_calc)"></select>
+          </div>
+          <div class="form-group">
+            <label for="f_gsm" id="f_fabricLabel">面料克重 (可直接修改)</label>
+            <div class="input-wrapper"><input type="number" id="f_gsm" value="220" step="5" oninput="f_calc()"><span class="unit-addon">g/m²</span></div>
+          </div>
+        </div>
+
+        <div class="results-card">
+          <div class="results-grid">
+            <div class="stat-box full-width highlight" style="border-left-color:#0d9488;">
+              <div class="stat-title">单件推荐成品外箱规格 (长 × 宽 × 高)</div>
+              <div class="stat-main-num" id="f_resBoxDims">-</div>
+              <div class="stat-sub" id="f_resBoxDetail">-</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-title">单件打包总毛重</div>
+              <div class="stat-main-num" id="f_resGrossW" style="color:#0d9488;">-</div>
+              <div class="stat-sub" id="f_resNetW">净重: - kg</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-title">外箱总体积</div>
+              <div class="stat-main-num" id="f_resVol">-</div>
+              <div class="stat-sub">计费体积 (m³)</div>
+            </div>
+          </div>
+          <div class="action-btn-row">
+            <button class="btn-action btn-copy-sub" onclick="f_copy()">📋 复制单件打包信息</button>
+            <button class="btn-action btn-add-cart" style="background:#0d9488;" onclick="f_addToCart()">➕ 加入整单堆叠清单</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. 开合/梦幻帘系列 -->
+  <div class="tab-view" id="view-drape">
+    <div class="calc-card">
+      <div class="card-header-bar h-drape">
+        <div><strong>开合帘 / 梦幻帘</strong> (自动双包拆分)</div>
+        <span style="font-size:0.7rem; opacity:0.8;">独立包装</span>
+      </div>
+      <div class="card-body">
+        <div class="section-label">1. 品类与机构选型</div>
+        <div class="grid-2">
+          <div class="form-group">
+            <label for="d_cat">品类</label>
+            <select id="d_cat" onchange="d_onCatChange()">
+              <option value="开合帘">开合帘</option>
+              <option value="梦幻帘">梦幻帘</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="d_model">机构型号</label>
+            <select id="d_model" onchange="d_onModelChange()"></select>
+          </div>
+        </div>
+
+        <div class="spec-preview-card">
+          <div><div class="spec-item-title">机构深</div><div class="spec-item-value" id="d_specD">-</div></div>
+          <div><div class="spec-item-title">机构高</div><div class="spec-item-value" id="d_specH">-</div></div>
+          <div><div class="spec-item-title">型材米重</div><div class="spec-item-value" id="d_specP">-</div></div>
+          <div><div class="spec-item-title">配件重量</div><div class="spec-item-value" id="d_specA">-</div></div>
+        </div>
+
+        <div class="section-label">2. 制作尺寸 (cm) 与裁切限长 (m)</div>
+        <div class="grid-2">
+          <div class="form-group">
+            <label for="d_w">制作宽度 (W)</label>
+            <div class="input-wrapper"><input type="number" id="d_w" value="600" step="1" oninput="d_calc()"><span class="unit-addon">cm</span></div>
+          </div>
+          <div class="form-group">
+            <label for="d_h">制作高度 (H)</label>
+            <div class="input-wrapper"><input type="number" id="d_h" value="280" step="1" oninput="d_calc()"><span class="unit-addon">cm</span></div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="form-group">
+            <label for="d_maxLimit">期望单根轨道不超过</label>
+            <div class="input-wrapper"><input type="number" id="d_maxLimit" value="3.0" step="0.1" oninput="d_calc()"><span class="unit-addon">m</span></div>
+          </div>
+          <div class="form-group">
+            <label for="d_fabricSelect">面料型号</label>
+            <select id="d_fabricSelect" onchange="onFabricSelectChange('d_cat', 'd_fabricSelect', 'd_gsm', d_calc)"></select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="d_gsm">面料克重 (可直接修改)</label>
+          <div class="input-wrapper"><input type="number" id="d_gsm" value="480" step="10" oninput="d_calc()"><span class="unit-addon">g/m²</span></div>
+        </div>
+
+        <div class="results-card">
+          <div id="d_pkgList"></div>
+          <div class="action-btn-row" style="grid-template-columns: 1fr 1fr;">
+            <button class="btn-action btn-copy-sub" onclick="d_copy()">📋 复制方案</button>
+            <button class="btn-action btn-add-cart" style="background:#8b5cf6;" onclick="d_addToCart()">➕ 放入整单池</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. 防风卷帘 -->
+  <div class="tab-view" id="view-zip">
+    <div class="calc-card">
+      <div class="card-header-bar h-zip">
+        <div><strong>防风卷帘</strong> (户外单套单件专用)</div>
+        <span style="font-size:0.7rem; opacity:0.8;">单件单打</span>
+      </div>
+      <div class="card-body">
+        <div class="section-label">1. 定制尺寸输入 (cm)</div>
+        <div class="grid-2">
+          <div class="form-group">
+            <label for="z_w">制作宽度 (W)</label>
+            <div class="input-wrapper"><input type="number" id="z_w" value="300" step="1" oninput="z_calc()"><span class="unit-addon">cm</span></div>
+          </div>
+          <div class="form-group">
+            <label for="z_h">制作高度 (H)</label>
+            <div class="input-wrapper"><input type="number" id="z_h" value="260" step="1" oninput="z_calc()"><span class="unit-addon">cm</span></div>
+          </div>
+        </div>
+
+        <div class="results-card">
+          <div style="font-size:0.75rem; font-weight:700; color:#0284c7; margin-bottom:6px;" id="z_matchTitle">-</div>
+          <div class="results-grid">
+            <div class="stat-box full-width highlight" style="border-left-color:#0284c7;">
+              <div class="stat-title">外箱打包尺寸 (Max(W,H)+5cm)</div>
+              <div class="stat-main-num" id="z_resDims">-</div>
+              <div class="stat-sub" id="z_resDimsMm">-</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-title">打包总毛重</div>
+              <div class="stat-main-num" id="z_resW" style="color:#0284c7;">-</div>
+              <div class="stat-sub" id="z_resWeightSub">-</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-title">外箱总体积</div>
+              <div class="stat-main-num" id="z_resVol">-</div>
+              <div class="stat-sub">计费体积 (m³)</div>
+            </div>
+          </div>
+          <div class="action-btn-row" style="grid-template-columns: 1fr 1fr;">
+            <button class="btn-action btn-copy-sub" onclick="z_copy()">📋 复制防风卷帘</button>
+            <button class="btn-action btn-add-cart" style="background:#0284c7;" onclick="z_addToCart()">➕ 放入整单池</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. 整单多产品堆叠与分箱 -->
+  <div class="tab-view" id="view-stack">
+    <div class="calc-card">
+      <div class="card-header-bar h-stack">
+        <div><strong>整单堆叠与智能分箱工作台</strong></div>
+        <span style="font-size:0.7rem; opacity:0.8;">物流总控</span>
+      </div>
+      <div class="card-body">
+        <div class="section-label">1. 已录入订单产品列表 (<span id="cartCount">0</span> 件)</div>
+        <div id="cartList"></div>
+
+        <button class="btn-action" style="background:#f1f5f9; color:#475569; width:100%; border:1px dashed #cbd5e1; margin-bottom:12px;" onclick="clearCart()">
+          🗑️ 一键清空所有产品清单
+        </button>
+
+        <div class="section-label">2. 智能装箱与分包总览 (已自动施加 5cm 封箱放量)</div>
+        <div style="background:#ffffff; border:1.5px solid #10b981; border-radius:8px; padding:10px; display:grid; grid-template-columns:1fr 1fr 1fr; text-align:center; margin-bottom:10px;">
+          <div><div style="font-size:0.65rem; color:#64748b;">整单包裹数</div><div style="font-size:1.15rem; font-weight:800; color:#2563eb;" id="st_pkgs">-</div></div>
+          <div><div style="font-size:0.65rem; color:#64748b;">发货总体积</div><div style="font-size:1.15rem; font-weight:800;" id="st_vol">-</div></div>
+          <div><div style="font-size:0.65rem; color:#64748b;">发货总毛重</div><div style="font-size:1.15rem; font-weight:800; color:#059669;" id="st_weight">-</div></div>
+        </div>
+
+        <div id="stackPackageList"></div>
+
+        <button class="btn-action" style="background:#10b981; color:#ffffff; width:100%; margin-top:8px;" onclick="copyStackResult()">
+          📋 一键复制整单发货分包明细
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast"><span>提示</span></div>
+
+<script>
+/**
+ * -------------------------------------------------------------
+ * 1. 完整全量面料数据库（兜底）与 CSV 动态加载
+ * -------------------------------------------------------------
+ */
+let FABRIC_MAP = {
+  "卷帘": [
+    { code: "JLY01", gsm: 240 }, { code: "ZGJLY01", gsm: 450 }, { code: "JLY02", gsm: 195 },
+    { code: "ZGJLY02", gsm: 420 }, { code: "JLY03", gsm: 190 }, { code: "ZGJLY03", gsm: 420 },
+    { code: "JLY04", gsm: 190 }, { code: "ZGJLY04", gsm: 420 }, { code: "JLY05", gsm: 120 },
+    { code: "JLY06", gsm: 215 }, { code: "ZGJLY06", gsm: 405 }, { code: "JLY07", gsm: 275 },
+    { code: "ZGJLY07", gsm: 485 }, { code: "ZGJLY08", gsm: 400 }, { code: "ZGJLY09", gsm: 320 },
+    { code: "ZGJLY10", gsm: 210 }, { code: "JLY11", gsm: 205 }, { code: "ZGJLY11", gsm: 350 },
+    { code: "JLY12", gsm: 170 }, { code: "ZGJLY12", gsm: 360 }, { code: "ZGJLY13", gsm: 330 },
+    { code: "JLY14", gsm: 190 }, { code: "ZGJLY14", gsm: 355 }, { code: "JL60(5%开孔)", gsm: 520 },
+    { code: "JL70(3%开孔)", gsm: 440 }, { code: "JL80(1%开孔)", gsm: 410 }, { code: "JL85(1%开孔)", gsm: 525 },
+    { code: "JL85(3%开孔)", gsm: 437 }, { code: "JL85(8%开孔)", gsm: 428 }, { code: "JL90(全遮光)", gsm: 663 },
+    { code: "JL75(全遮光)", gsm: 360 }, { code: "JL65(全遮光)", gsm: 370 }, { code: "JL66(半遮光)", gsm: 220 },
+    { code: "JL81(全遮光)", gsm: 330 }, { code: "FFUV05(5%开孔)", gsm: 579 }, { code: "FFUV01(1%开孔)", gsm: 721 },
+    { code: "FFUV03(3%开孔)", gsm: 556 }, { code: "FFUV20(20%开孔)", gsm: 412 }, { code: "FFTH1(1%开孔)", gsm: 467 },
+    { code: "FFWC03(3%开孔)", gsm: 390 }, { code: "FFZG00(0%遮光)", gsm: 570 }, { code: "FFMY14(14%开孔)", gsm: 390 },
+    { code: "FFMY04(4%开孔)", gsm: 440 }
+  ],
+  "斑马帘": [
+    { code: "BMY01", gsm: 190 }, { code: "BMY02", gsm: 137 }, { code: "BMY03", gsm: 346 },
+    { code: "BMY04", gsm: 220 }, { code: "BMY05", gsm: 263 }, { code: "BMY06", gsm: 173 },
+    { code: "BMY07", gsm: 172 }, { code: "BMY08", gsm: 157.5 }, { code: "BMY09", gsm: 171 },
+    { code: "BMY10", gsm: 171 }, { code: "BMY11", gsm: 204 }, { code: "BMY12", gsm: 177 },
+    { code: "BMY13", gsm: 246 }, { code: "GDBM01", gsm: 160 }, { code: "GDBM02", gsm: 160 },
+    { code: "GDBM03", gsm: 135 }, { code: "GDBM04", gsm: 165 }, { code: "GDBM05", gsm: 267 },
+    { code: "GDBM10", gsm: 201 }, { code: "GDBM14", gsm: 109 }, { code: "GDBM15", gsm: 263 },
+    { code: "GDBM19", gsm: 265 }
+  ],
+  "香格里拉帘": [
+    { code: "GDXG01", gsm: 195 }, { code: "GDXG02", gsm: 195 }, { code: "GDXG03", gsm: 145 },
+    { code: "GDXG04", gsm: 250 }, { code: "GDXG05", gsm: 250 }, { code: "GDXG06", gsm: 260 },
+    { code: "GDXG07", gsm: 275 }, { code: "GDXG08", gsm: 250 }, { code: "GDXG09", gsm: 200 },
+    { code: "GDXG10", gsm: 199 }, { code: "GDXG11", gsm: 211 }, { code: "GDXG12", gsm: 211 },
+    { code: "GDXG13", gsm: 198 }, { code: "GDXG14", gsm: 199 }, { code: "GDXG15", gsm: 209 },
+    { code: "GDXG16", gsm: 470 }, { code: "GDXG17", gsm: 207 }, { code: "GDXG18", gsm: 202 },
+    { code: "GDXG19", gsm: 192 }
+  ],
+  "蜂巢帘": [
+    { code: "FC-全遮光", gsm: 220 }, { code: "FC-半遮光", gsm: 135 }, { code: "FC-透光纱网", gsm: 80 }
+  ],
+  "升旗蜂巢帘": [
+    { code: "SQ-全遮光", gsm: 220 }, { code: "SQ-半遮光", gsm: 135 }, { code: "SQ-透光纱网", gsm: 80 }
+  ],
+  "日夜蜂巢帘": [
+    { code: "RY-全遮光+纱网", gsm: 300 }, { code: "RY-半遮光+全遮光", gsm: 355 }
+  ],
+  "罗马帘": [
+    { code: "LM01", gsm: 125 }, { code: "LM02", gsm: 170 }, { code: "LM03", gsm: 160 },
+    { code: "LM04", gsm: 150 }, { code: "LM05", gsm: 260 }, { code: "LM06", gsm: 210 },
+    { code: "LM07", gsm: 130 }, { code: "LM08", gsm: 165 }, { code: "LM09", gsm: 200 },
+    { code: "LM10", gsm: 135 }, { code: "LM11", gsm: 220 }, { code: "LM12", gsm: 255 },
+    { code: "LM13", gsm: 420 }, { code: "LM14", gsm: 410 }, { code: "LM15", gsm: 130 }
+  ],
+  "开合帘": [
+    { code: "布帘", gsm: 480 }, { code: "纱帘", gsm: 180 }, { code: "亚麻", gsm: 420 }
+  ],
+  "梦幻帘": [
+    { code: "玉马梦幻帘(标准)", gsm: 260 }, { code: "玉马梦幻帘(全遮光)", gsm: 320 },
+    { code: "玉马哈纳斯(透光)", gsm: 240 }, { code: "玉马哈纳斯(PVC插片全遮光)", gsm: 550 }
+  ]
+};
+
+function loadFabricCsv() {
+  fetch("fabrics.csv")
+    .then(res => {
+      if (!res.ok) throw new Error("CSV not found");
+      return res.text();
+    })
+    .then(text => {
+      if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+      const lines = text.split(/\r?\n/);
+      const newMap = {};
+      for (let i = 1; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line) continue;
+        const parts = line.split(",");
+        if (parts.length >= 3) {
+          const cat = parts[0].trim();
+          const code = parts[1].trim();
+          const gsm = parseFloat(parts[2].trim()) || 0;
+          if (!newMap[cat]) newMap[cat] = [];
+          newMap[cat].push({ code, gsm });
+        }
+      }
+      if (Object.keys(newMap).length > 0) {
+        FABRIC_MAP = newMap;
+      }
+      refreshAllFabricSelects();
+    })
+    .catch(() => {
+      refreshAllFabricSelects();
+    });
+}
+
+function refreshAllFabricSelects() {
+  if (document.getElementById("r_cat")) populateFabricSelect(document.getElementById("r_cat").value, "r_fabricSelect", "r_gsm", r_calc);
+  if (document.getElementById("f_cat")) populateFabricSelect(document.getElementById("f_cat").value, "f_fabricSelect", "f_gsm", f_calc);
+  if (document.getElementById("d_cat")) populateFabricSelect(document.getElementById("d_cat").value, "d_fabricSelect", "d_gsm", d_calc);
+}
+
+function populateFabricSelect(catKey, selectId, gsmInputId, callback) {
+  const sel = document.getElementById(selectId);
+  if (!sel) return;
+  const list = FABRIC_MAP[catKey] || [];
+  sel.innerHTML = "";
+
+  list.forEach((item) => {
+    const opt = document.createElement("option");
+    opt.value = item.code;
+    opt.textContent = `${item.code} (${item.gsm} g/㎡)`;
+    opt.setAttribute("data-gsm", item.gsm);
+    sel.appendChild(opt);
+  });
+
+  const customOpt = document.createElement("option");
+  customOpt.value = "CUSTOM";
+  customOpt.textContent = "⚙️ 自定义 / 手动输入克重";
+  customOpt.setAttribute("data-gsm", "");
+  sel.appendChild(customOpt);
+
+  if (list.length > 0) {
+    document.getElementById(gsmInputId).value = list[0].gsm;
+  }
+  if (callback) callback();
+}
+
+function onFabricSelectChange(catSelectId, selectId, gsmInputId, callback) {
+  const sel = document.getElementById(selectId);
+  const selectedOpt = sel.options[sel.selectedIndex];
+  const gsmVal = selectedOpt.getAttribute("data-gsm");
+  if (gsmVal && gsmVal !== "") {
+    document.getElementById(gsmInputId).value = gsmVal;
+  }
+  if (callback) callback();
+}
+
+/**
+ * -------------------------------------------------------------
+ * 2. 5款长条成品箱规格库 (单位: 米)
+ * -------------------------------------------------------------
+ */
+const STD_BOXES = [
+  { id: "BOX_10_10", name: "10×10cm", w: 0.10, h: 0.10, pw: 0.45 },
+  { id: "BOX_10_20", name: "10×20cm", w: 0.10, h: 0.20, pw: 0.58 },
+  { id: "BOX_10_30", name: "10×30cm", w: 0.10, h: 0.30, pw: 0.80 },
+  { id: "BOX_20_20", name: "20×20cm", w: 0.20, h: 0.20, pw: 0.80 },
+  { id: "BOX_20_30", name: "20×30cm", w: 0.20, h: 0.30, pw: 0.95 }
+];
+const MAX_STD_BOX = STD_BOXES[4];
+
+function fitSingleStdBox(depthM, heightM) {
+  for (let b of STD_BOXES) {
+    if ((depthM <= b.w + 0.005 && heightM <= b.h + 0.005) || (depthM <= b.h + 0.005 && heightM <= b.w + 0.005)) {
+      return b;
+    }
+  }
+  return MAX_STD_BOX;
+}
+
+/**
+ * -------------------------------------------------------------
+ * 3. 购物车与视图切换
+ * -------------------------------------------------------------
+ */
+let orderCart = [];
+
+function switchTab(tabId) {
+  document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+  document.querySelectorAll('.tab-view').forEach(view => view.classList.remove('active'));
+
+  document.getElementById(`btn-${tabId}`).classList.add('active');
+  document.getElementById(`view-${tabId}`).classList.add('active');
+  if (tabId === 'stack') renderStackCalculator();
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.querySelector('span').textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+function updateCartBadge() {
+  const count = orderCart.length;
+  document.getElementById('cartCountBadge').textContent = count;
+  document.getElementById('cartCount').textContent = count;
+}
+
+/**
+ * -------------------------------------------------------------
+ * 4. 卷轴系列计算 (输入 cm)
+ * -------------------------------------------------------------
+ */
+const R_CONFIG = {
+  "卷帘": { layer: 1, models: [
+    { id: "A01", d: 0.062, h: 0.084, pw: 0.7, aw: 0.8 },
+    { id: "A02", d: 0.075, h: 0.080, pw: 1.3, aw: 0.8 },
+    { id: "A03", d: 0.065, h: 0.085, pw: 1.5, aw: 0.8 },
+    { id: "A04", d: 0.095, h: 0.130, pw: 2.5, aw: 1.7 },
+    { id: "A05", d: 0.093, h: 0.102, pw: 1.7, aw: 1.9 },
+    { id: "A06", d: 0.075, h: 0.080, pw: 1.3, aw: 0.8 },
+    { id: "A07", d: 0.069, h: 0.081, pw: 1.3, aw: 0.8 }
+  ]},
+  "斑马帘": { layer: 2, models: [
+    { id: "B02", d: 0.075, h: 0.080, pw: 1.4, aw: 0.8 },
+    { id: "B03", d: 0.065, h: 0.085, pw: 1.6, aw: 0.8 },
+    { id: "B05", d: 0.093, h: 0.102, pw: 1.8, aw: 1.9 },
+    { id: "B07", d: 0.069, h: 0.081, pw: 1.4, aw: 0.8 }
+  ]},
+  "香格里拉帘": { layer: 1, models: [
+    { id: "C02", d: 0.075, h: 0.080, pw: 1.3, aw: 0.8 },
+    { id: "C03", d: 0.065, h: 0.085, pw: 1.5, aw: 0.8 },
+    { id: "C05", d: 0.093, h: 0.102, pw: 1.7, aw: 1.9 },
+    { id: "C07", d: 0.069, h: 0.081, pw: 1.3, aw: 0.8 }
+  ]}
+};
+
+function r_init() {
+  const s = document.getElementById("r_cat");
+  s.innerHTML = "";
+  Object.keys(R_CONFIG).forEach(c => {
+    const o = document.createElement("option"); o.value = c; o.textContent = c; s.appendChild(o);
+  });
+  r_onCatChange();
+}
+
+function r_onCatChange() {
+  const cat = document.getElementById("r_cat").value;
+  const mSel = document.getElementById("r_model");
+  mSel.innerHTML = "";
+  R_CONFIG[cat].models.forEach(m => {
+    const o = document.createElement("option"); o.value = m.id; o.textContent = `${m.id} 型号`; mSel.appendChild(o);
+  });
+  populateFabricSelect(cat, "r_fabricSelect", "r_gsm", r_calc);
+  r_onModelChange();
+}
+
+function r_onModelChange() {
+  const cat = document.getElementById("r_cat").value;
+  const mid = document.getElementById("r_model").value;
+  const m = R_CONFIG[cat].models.find(x => x.id === mid);
+  if (m) {
+    document.getElementById("r_specD").textContent = `${Math.round(m.d*1000)}mm`;
+    document.getElementById("r_specH").textContent = `${Math.round(m.h*1000)}mm`;
+    document.getElementById("r_specP").textContent = `${m.pw}kg/m`;
+    document.getElementById("r_specA").textContent = `${m.aw}kg`;
+  }
+  r_calc();
+}
+
+function r_calc() {
+  const cat = document.getElementById("r_cat").value;
+  const mid = document.getElementById("r_model").value;
+  const m = R_CONFIG[cat].models.find(x => x.id === mid);
+  if (!m) return;
+
+  const w_cm = parseFloat(document.getElementById("r_w").value) || 0;
+  const h_cm = parseFloat(document.getElementById("r_h").value) || 0;
+  const gsm = parseFloat(document.getElementById("r_gsm").value) || 0;
+
+  const w_m = w_cm / 100.0;
+  const h_m = h_cm / 100.0;
+
+  const netW = (m.pw * w_m) + m.aw + ((gsm / 1000) * w_m * h_m * R_CONFIG[cat].layer);
+
+  const singleBoxL_cm = w_cm + 5;
+  const matchedBox = fitSingleStdBox(m.d, m.h);
+  const singleBoxVol_m3 = (singleBoxL_cm / 100.0) * matchedBox.w * matchedBox.h;
+  const singleBoxWgt = (singleBoxL_cm / 100.0) * matchedBox.pw;
+  const singleGrossW = netW + singleBoxWgt;
+
+  const fabSel = document.getElementById("r_fabricSelect");
+  const currentFab = (fabSel && fabSel.value !== "CUSTOM") ? fabSel.value : "自定义面料";
+
+  document.getElementById("r_resBoxDims").textContent = `${singleBoxL_cm} × ${Math.round(matchedBox.w*100)} × ${Math.round(matchedBox.h*100)} cm`;
+  document.getElementById("r_resBoxDetail").textContent = `选用 ${matchedBox.name} 箱 (长${singleBoxL_cm}cm / ${Math.round(singleBoxL_cm*10)}mm)`;
+  document.getElementById("r_resGrossW").textContent = `${singleGrossW.toFixed(2)} kg`;
+  document.getElementById("r_resNetW").textContent = `净重: ${netW.toFixed(2)} kg + 箱重: ${singleBoxWgt.toFixed(2)} kg`;
+  document.getElementById("r_resVol").textContent = `${singleBoxVol_m3.toFixed(3)} m³`;
+
+  window.lastR = {
+    type: "stackable",
+    title: `${cat}(${mid})-${currentFab}`,
+    w_cm: w_cm,
+    h_cm: h_cm,
+    l: w_m,
+    d: m.d,
+    h: m.h,
+    weight: netW,
+    singleBoxDesc: `${singleBoxL_cm}×${Math.round(matchedBox.w*100)}×${Math.round(matchedBox.h*100)}cm`,
+    singleGrossW: singleGrossW,
+    singleVol: singleBoxVol_m3
+  };
+}
+
+function r_copy() {
+  r_calc();
+  const t = `【${window.lastR.title} 单件打包信息】\n制作尺寸：宽 ${window.lastR.w_cm}cm × 高 ${window.lastR.h_cm}cm\n📦 外箱规格：${window.lastR.singleBoxDesc}\n📦 外箱体积：${window.lastR.singleVol.toFixed(3)} m³\n⚖️ 打包毛重：${window.lastR.singleGrossW.toFixed(2)} kg`;
+  navigator.clipboard.writeText(t).then(() => showToast("单件打包信息已复制！"));
+}
+
+function r_addToCart() {
+  r_calc();
+  orderCart.push({ ...window.lastR, id: Date.now() });
+  updateCartBadge();
+  showToast(`已加入整单清单！(当前共 ${orderCart.length} 件)`);
+}
+
+/**
+ * -------------------------------------------------------------
+ * 5. 蜂巢/罗马系列计算 (输入 cm)
+ * -------------------------------------------------------------
+ */
+const F_CONFIG = {
+  "蜂巢帘": { hFactor: 0.03, models: [
+    { id: "D01", d: 0.035, h: 0.045, pw: 0.6, aw: 0.6, isSpecial: false },
+    { id: "D02", d: 0.035, h: 0.040, pw: 0.6, aw: 0.6, isSpecial: false },
+    { id: "D03", d: 0.035, h: 0.045, pw: 0.8, aw: 0.6, isSpecial: false },
+    { id: "D04", d: 0.024, h: 0.073, pw: 1.0, aw: 0.6, isSpecial: false },
+    { id: "D05", d: 0.060, h: 0.050, pw: 0.2, aw: 0.6, isSpecial: true },
+    { id: "F01", d: 0.070, h: 0.080, pw: 0.3, aw: 0.6, isSpecial: true },
+    { id: "F02", d: 0.110, h: 0.150, pw: 1.0, aw: 0.6, isSpecial: true },
+    { id: "F03", d: 0.080, h: 0.120, pw: 1.0, aw: 0.6, isSpecial: true }
+  ]},
+  "升旗蜂巢帘": { hFactor: 0.03, models: [
+    { id: "D01", d: 0.035, h: 0.060, pw: 0.8, aw: 0.6, isSpecial: false },
+    { id: "D03", d: 0.035, h: 0.060, pw: 0.9, aw: 0.6, isSpecial: false }
+  ]},
+  "日夜蜂巢帘": { hFactor: 0.06, models: [
+    { id: "D01", d: 0.035, h: 0.060, pw: 0.8, aw: 0.6, isSpecial: false },
+    { id: "D03", d: 0.035, h: 0.060, pw: 0.9, aw: 0.6, isSpecial: false }
+  ]},
+  "罗马帘": { hFactor: 0, isRoman: true, models: [
+    { id: "G01", d: 0.100, h: 0.100, pw: 0.7, aw: 0.6, isSpecial: false },
+    { id: "G02", d: 0.100, h: 0.100, pw: 0.7, aw: 0.6, isSpecial: false },
+    { id: "G03", d: 0.100, h: 0.100, pw: 0.9, aw: 0.6, isSpecial: false }
+  ]}
+};
+
+function f_init() {
+  const s = document.getElementById("f_cat");
+  s.innerHTML = "";
+  Object.keys(F_CONFIG).forEach(c => {
+    const o = document.createElement("option"); o.value = c; o.textContent = c; s.appendChild(o);
+  });
+  f_onCatChange();
+}
+
+function f_onCatChange() {
+  const cat = document.getElementById("f_cat").value;
+  const mSel = document.getElementById("f_model");
+  mSel.innerHTML = "";
+  F_CONFIG[cat].models.forEach(m => {
+    const o = document.createElement("option"); o.value = m.id; o.textContent = `${m.id}`; mSel.appendChild(o);
+  });
+  populateFabricSelect(cat, "f_fabricSelect", "f_gsm", f_calc);
+  f_onModelChange();
+}
+
+function f_onModelChange() {
+  const cat = document.getElementById("f_cat").value;
+  const mid = document.getElementById("f_model").value;
+  const m = F_CONFIG[cat].models.find(x => x.id === mid);
+  if (m) {
+    document.getElementById("f_specD").textContent = `${Math.round(m.d*1000)}mm`;
+    document.getElementById("f_specH").textContent = `${Math.round(m.h*1000)}mm`;
+    document.getElementById("f_specP").textContent = `${m.pw}kg/m`;
+    document.getElementById("f_specA").textContent = `${m.aw}kg`;
+  }
+  f_calc();
+}
+
+function f_calc() {
+  const cat = document.getElementById("f_cat").value;
+  const mid = document.getElementById("f_model").value;
+  const cfg = F_CONFIG[cat];
+  const m = cfg.models.find(x => x.id === mid);
+  if (!m) return;
+
+  const w_cm = parseFloat(document.getElementById("f_w").value) || 0;
+  const h_cm = parseFloat(document.getElementById("f_h").value) || 0;
+  const gsm = parseFloat(document.getElementById("f_gsm").value) || 0;
+
+  const w_m = w_cm / 100.0;
+  const h_m = h_cm / 100.0;
+
+  const rawL_m = m.isSpecial ? Math.max(w_m, h_m) : w_m;
+  const rawH_m = m.h + (h_m * (cfg.hFactor || 0));
+
+  let rodW = 0;
+  if (cfg.isRoman) {
+    rodW = w_m * 0.08 * Math.round(h_m / 0.15);
+  }
+  const netW = (m.pw * w_m) + m.aw + ((gsm / 1000) * w_m * h_m) + rodW;
+
+  const singleBoxL_cm = Math.round(rawL_m * 100) + 5;
+  const matchedBox = fitSingleStdBox(m.d, rawH_m);
+  const singleBoxVol_m3 = (singleBoxL_cm / 100.0) * matchedBox.w * matchedBox.h;
+  const singleBoxWgt = (singleBoxL_cm / 100.0) * matchedBox.pw;
+  const singleGrossW = netW + singleBoxWgt;
+
+  const fabSel = document.getElementById("f_fabricSelect");
+  const currentFab = (fabSel && fabSel.value !== "CUSTOM") ? fabSel.value : "自定义面料";
+
+  document.getElementById("f_resBoxDims").textContent = `${singleBoxL_cm} × ${Math.round(matchedBox.w*100)} × ${Math.round(matchedBox.h*100)} cm`;
+  document.getElementById("f_resBoxDetail").textContent = `选用 ${matchedBox.name} 箱 (长${singleBoxL_cm}cm)`;
+  document.getElementById("f_resGrossW").textContent = `${singleGrossW.toFixed(2)} kg`;
+  document.getElementById("f_resNetW").textContent = `净重: ${netW.toFixed(2)} kg + 箱重: ${singleBoxWgt.toFixed(2)} kg`;
+  document.getElementById("f_resVol").textContent = `${singleBoxVol_m3.toFixed(3)} m³`;
+
+  window.lastF = {
+    type: "stackable",
+    title: `${cat}(${mid})-${currentFab}`,
+    w_cm: w_cm,
+    h_cm: h_cm,
+    l: rawL_m,
+    d: m.d,
+    h: rawH_m,
+    weight: netW,
+    singleBoxDesc: `${singleBoxL_cm}×${Math.round(matchedBox.w*100)}×${Math.round(matchedBox.h*100)}cm`,
+    singleGrossW: singleGrossW,
+    singleVol: singleBoxVol_m3
+  };
+}
+
+function f_copy() {
+  f_calc();
+  const t = `【${window.lastF.title} 单件打包信息】\n制作尺寸：宽 ${window.lastF.w_cm}cm × 高 ${window.lastF.h_cm}cm\n📦 外箱规格：${window.lastF.singleBoxDesc}\n📦 外箱体积：${window.lastF.singleVol.toFixed(3)} m³\n⚖️ 打包毛重：${window.lastF.singleGrossW.toFixed(2)} kg`;
+  navigator.clipboard.writeText(t).then(() => showToast("单件打包信息已复制！"));
+}
+
+function f_addToCart() {
+  f_calc();
+  orderCart.push({ ...window.lastF, id: Date.now() });
+  updateCartBadge();
+  showToast(`已加入整单清单！(当前共 ${orderCart.length} 件)`);
+}
+
+/**
+ * -------------------------------------------------------------
+ * 6. 开合/梦幻帘系列计算 (输入 cm, 裁切限长 m)
+ * -------------------------------------------------------------
+ */
+const DRAPE_MODELS = {
+  "开合帘": [
+    { id: "H01", d: 0.095, h: 0.125, pw: 0.90, aw: 1.0 },
+    { id: "H02", d: 0.040, h: 0.030, pw: 0.70, aw: 1.0 },
+    { id: "H03", d: 0.040, h: 0.030, pw: 0.70, aw: 1.0 },
+    { id: "H04", d: 0.040, h: 0.030, pw: 0.70, aw: 1.0 },
+    { id: "H05", d: 0.040, h: 0.030, pw: 0.70, aw: 1.0 },
+    { id: "H06", d: 0.040, h: 0.030, pw: 0.70, aw: 0.5 }
+  ],
+  "梦幻帘": [
+    { id: "M1", d: 0.095, h: 0.125, pw: 1.33, aw: 1.0 },
+    { id: "M2", d: 0.095, h: 0.125, pw: 1.33, aw: 1.0 },
+    { id: "M3", d: 0.095, h: 0.125, pw: 0.80, aw: 1.0 },
+    { id: "M4", d: 0.095, h: 0.125, pw: 0.80, aw: 0.5 }
+  ]
+};
+
+function d_init() {
+  d_onCatChange();
+}
+
+function d_onCatChange() {
+  const cat = document.getElementById("d_cat").value;
+  const mSel = document.getElementById("d_model");
+  mSel.innerHTML = "";
+  DRAPE_MODELS[cat].forEach(m => {
+    const o = document.createElement("option"); o.value = m.id; o.textContent = `${m.id} 型号`; mSel.appendChild(o);
+  });
+  populateFabricSelect(cat, "d_fabricSelect", "d_gsm", d_calc);
+  d_onModelChange();
+}
+
+function d_onModelChange() {
+  const cat = document.getElementById("d_cat").value;
+  const mid = document.getElementById("d_model").value;
+  const m = DRAPE_MODELS[cat].find(x => x.id === mid);
+  if (m) {
+    document.getElementById("d_specD").textContent = `${Math.round(m.d*1000)}mm`;
+    document.getElementById("d_specH").textContent = `${Math.round(m.h*1000)}mm`;
+    document.getElementById("d_specP").textContent = `${m.pw}kg/m`;
+    document.getElementById("d_specA").textContent = `${m.aw}kg`;
+  }
+  d_calc();
+}
+
+function d_calc() {
+  const cat = document.getElementById("d_cat").value;
+  const mid = document.getElementById("d_model").value;
+  const model = DRAPE_MODELS[cat].find(x => x.id === mid);
+  if (!model) return;
+
+  const w_cm = parseFloat(document.getElementById("d_w").value) || 0;
+  const h_cm = parseFloat(document.getElementById("d_h").value) || 0;
+  const maxLimit_m = parseFloat(document.getElementById("d_maxLimit").value) || 3.0;
+  const gsm = parseFloat(document.getElementById("d_gsm").value) || 0;
+
+  const w_m = w_cm / 100.0;
+  const h_m = h_cm / 100.0;
+
+  let segments = 1;
+  if (w_m > maxLimit_m && maxLimit_m > 0) segments = Math.ceil(w_m / maxLimit_m);
+  const segL_m = w_m / segments;
+  const trackBoxL_cm = Math.round(segL_m * 100) + 5;
+  const trackBox = fitTrackBoxStd(model, segments);
+  const trackGrossW = (model.pw * w_m) + model.aw + ((trackBoxL_cm / 100.0) * trackBox.pw);
+  const trackVol = (trackBoxL_cm / 100.0) * trackBox.w * trackBox.h;
+
+  const prodArea = w_m * h_m;
+  let actualArea = (cat === "开合帘") ? prodArea * 2.2 : prodArea;
+  let fabricW = (gsm / 1000) * actualArea;
+
+  const pkgs = [];
+  pkgs.push({
+    title: `包裹 1：${cat}轨道系统 (${mid})`,
+    box: `${trackBox.name} (${trackBoxL_cm}×${Math.round(trackBox.w*100)}×${Math.round(trackBox.h*100)}cm)`,
+    wgt: trackGrossW,
+    vol: trackVol
+  });
+
+  if (cat === "开合帘") {
+    const fCount = Math.ceil(actualArea / 20.0) || 1;
+    for (let i = 1; i <= fCount; i++) {
+      const bWgt = (fabricW / fCount) + 1.70;
+      pkgs.push({
+        title: `包裹 ${i+1}：开合帘专用面料箱 (${i}/${fCount})`,
+        box: "60×50×40cm 专用箱",
+        wgt: bWgt,
+        vol: 0.60 * 0.50 * 0.40
+      });
+    }
+  } else {
+    if (actualArea <= 10.0) {
+      pkgs.push({
+        title: "包裹 2：梦幻帘专用小箱",
+        box: "44×29×29cm 梦幻小箱",
+        wgt: fabricW + 0.60,
+        vol: 0.44 * 0.29 * 0.29
+      });
+    } else {
+      const fCount = Math.ceil(actualArea / 20.0) || 1;
+      for (let i = 1; i <= fCount; i++) {
+        pkgs.push({
+          title: `包裹 ${i+1}：梦幻帘专用大箱 (${i}/${fCount})`,
+          box: "44×44×36cm 梦幻大箱",
+          wgt: (fabricW / fCount) + 0.90,
+          vol: 0.44 * 0.44 * 0.36
+        });
+      }
+    }
+  }
+
+  const container = document.getElementById("d_pkgList");
+  container.innerHTML = "";
+  pkgs.forEach(p => {
+    const div = document.createElement("div");
+    div.style.padding = "6px 8px";
+    div.style.background = "#ffffff";
+    div.style.border = "1px solid #e2e8f0";
+    div.style.borderRadius = "6px";
+    div.style.marginBottom = "6px";
+    div.style.fontSize = "0.75rem";
+    div.innerHTML = `<strong>${p.title}</strong><br>箱规: ${p.box} | 毛重: <strong>${p.wgt.toFixed(2)}kg</strong> | 体积: ${p.vol.toFixed(3)}m³`;
+    container.appendChild(div);
+  });
+
+  window.lastDrape = {
+    cat: cat,
+    mid: mid,
+    w_cm: w_cm,
+    h_cm: h_cm,
+    pkgs: pkgs
+  };
+}
+
+function d_copy() {
+  d_calc();
+  let t = `【${window.lastDrape.cat}(${window.lastDrape.mid}) 打包方案】\n制作尺寸：宽 ${window.lastDrape.w_cm}cm × 高 ${window.lastDrape.h_cm}cm\n`;
+  window.lastDrape.pkgs.forEach(p => t += `• ${p.title} (${p.box}, ${p.wgt.toFixed(2)}kg)\n`);
+  navigator.clipboard.writeText(t).then(() => showToast("打包方案已复制！"));
+}
+
+function d_addToCart() {
+  d_calc();
+  window.lastDrape.pkgs.forEach(p => {
+    orderCart.push({
+      type: "independent",
+      title: p.title,
+      boxDesc: p.box,
+      weight: p.wgt,
+      volume: p.vol,
+      id: Date.now() + Math.random()
+    });
+  });
+  updateCartBadge();
+  showToast(`已将 ${window.lastDrape.pkgs.length} 个独立包裹放入整单池！`);
+}
+
+/**
+ * -------------------------------------------------------------
+ * 7. 防风卷帘计算 (输入 cm)
+ * -------------------------------------------------------------
+ */
+function z_calc() {
+  const w_cm = parseFloat(document.getElementById("z_w").value) || 0;
+  const h_cm = parseFloat(document.getElementById("z_h").value) || 0;
+  if (w_cm <= 0 || h_cm <= 0) return;
+
+  const w_m = w_cm / 100.0;
+  const h_m = h_cm / 100.0;
+
+  let modelName = "";
+  let boxD_cm = 0, boxH_cm = 0, pw = 0;
+
+  if (w_m <= 4.0 && h_m <= 3.0) {
+    modelName = "100款 (13×22cm 箱)";
+    boxD_cm = 22; boxH_cm = 13; pw = 15;
+  } else if (w_m <= 5.5 && h_m <= 2.5) {
+    modelName = "100款 (13×22cm 箱)";
+    boxD_cm = 22; boxH_cm = 13; pw = 15;
+  } else {
+    modelName = "120款 (17×26cm 箱)";
+    boxD_cm = 26; boxH_cm = 17; pw = 18;
+  }
+
+  const boxL_cm = Math.max(w_cm, h_cm) + 5;
+  const boxL_m = boxL_cm / 100.0;
+  const vol_m3 = boxL_m * (boxD_cm / 100.0) * (boxH_cm / 100.0);
+  const grossW = boxL_m * pw;
+
+  document.getElementById("z_matchTitle").textContent = `匹配结果：${modelName}`;
+  document.getElementById("z_resDims").textContent = `${boxL_cm} × ${boxD_cm} × ${boxH_cm} cm`;
+  document.getElementById("z_resDimsMm").textContent = `${boxL_cm * 10} × ${boxD_cm * 10} × ${boxH_cm * 10} mm`;
+  document.getElementById("z_resW").textContent = `${grossW.toFixed(2)} kg`;
+  document.getElementById("z_resWeightSub").textContent = `按 ${boxL_m.toFixed(2)}m × ${pw}kg/m 计算`;
+  document.getElementById("z_resVol").textContent = `${vol_m3.toFixed(3)} m³`;
+
+  window.lastZip = {
+    type: "independent",
+    title: `防风卷帘 (${modelName})`,
+    w_cm: w_cm,
+    h_cm: h_cm,
+    boxDesc: `${boxL_cm}×${boxD_cm}×${boxH_cm}cm 箱`,
+    weight: grossW,
+    volume: vol_m3
+  };
+}
+
+function z_copy() {
+  z_calc();
+  const t = `【防风卷帘单套打包信息】\n制作尺寸：宽 ${window.lastZip.w_cm}cm × 高 ${window.lastZip.h_cm}cm\n📦 外箱规格：${window.lastZip.boxDesc}\n📦 外箱体积：${window.lastZip.volume.toFixed(3)} m³\n⚖️ 打包毛重：${window.lastZip.weight.toFixed(2)} kg`;
+  navigator.clipboard.writeText(t).then(() => showToast("防风卷帘信息已复制！"));
+}
+
+function z_addToCart() {
+  z_calc();
+  orderCart.push({ ...window.lastZip, id: Date.now() });
+  updateCartBadge();
+  showToast("防风卷帘独立包裹已加入整单池！");
+}
+
+/**
+ * -------------------------------------------------------------
+ * 8. 堆叠与分箱算法 (整单总控)
+ * -------------------------------------------------------------
+ */
+function fitTrackBoxStd(model, segs) {
+  const reqW = model.d;
+  const reqH = model.h * segs;
+  const cols = Math.min(2, segs);
+  const rows = Math.ceil(segs / cols);
+  const reqW2 = model.d * cols;
+  const reqH2 = model.h * rows;
+
+  for (let b of STD_BOXES) {
+    if ((reqW <= b.w + 0.005 && reqH <= b.h + 0.005) || (reqW2 <= b.w + 0.005 && reqH2 <= b.h + 0.005)) {
+      return b;
+    }
+  }
+  return MAX_STD_BOX;
+}
+
+function fitStackBoxes(groupItems) {
+  const v_w = Math.max(...groupItems.map(i => i.d));
+  const v_h = groupItems.reduce((s, i) => s + i.h, 0);
+
+  const h_w = groupItems.reduce((s, i) => s + i.d, 0);
+  const h_h = Math.max(...groupItems.map(i => i.h));
+
+  let g_w = 0, g_h = 0;
+  if (groupItems.length >= 3) {
+    const cols = 2;
+    const rows = Math.ceil(groupItems.length / cols);
+    const avgD = groupItems.reduce((s, i) => s + i.d, 0) / groupItems.length;
+    const avgH = groupItems.reduce((s, i) => s + i.h, 0) / groupItems.length;
+    g_w = avgD * cols;
+    g_h = avgH * rows;
+  }
+
+  const orients = [
+    { type: "垂直叠放", w: v_w, h: v_h },
+    { type: "水平并排", w: h_w, h: h_h }
+  ];
+  if (groupItems.length >= 3) orients.push({ type: "双列成捆", w: g_w, h: g_h });
+
+  function fit(rw, rh, bw, bh) {
+    return ((rw <= bw + 0.005) && (rh <= bh + 0.005)) || ((rw <= bh + 0.005) && (rh <= bw + 0.005));
+  }
+
+  for (let b of STD_BOXES) {
+    for (let o of orients) {
+      if (fit(o.w, o.h, b.w, b.h)) return { box: b, orient: o.type };
+    }
+  }
+  return null;
+}
+
+function renderStackCalculator() {
+  updateCartBadge();
+  const cList = document.getElementById("cartList");
+  cList.innerHTML = "";
+
+  if (orderCart.length === 0) {
+    cList.innerHTML = `<div style="font-size:0.75rem; color:#94a3b8; text-align:center; padding:12px;">发货池为空，请在各产品页面点击【加入整单清单】</div>`;
+    document.getElementById("st_pkgs").textContent = "-";
+    document.getElementById("st_vol").textContent = "-";
+    document.getElementById("st_weight").textContent = "-";
+    document.getElementById("stackPackageList").innerHTML = "";
+    return;
+  }
+
+  orderCart.forEach((it, idx) => {
+    const div = document.createElement("div");
+    div.className = "cart-item-card";
+    if (it.type === "stackable") {
+      div.innerHTML = `
+        <div><strong>${idx + 1}. ${it.title}</strong> (宽${it.w_cm}cm × 高${it.h_cm}cm, 净重${it.weight.toFixed(2)}kg)</div>
+        <button class="btn-del" onclick="deleteCartItem(${idx})">✕ 移除</button>
+      `;
+    } else {
+      div.innerHTML = `
+        <div><strong>${idx + 1}. ${it.title}</strong> [独立件: ${it.boxDesc}, 毛重${it.weight.toFixed(2)}kg]</div>
+        <button class="btn-del" onclick="deleteCartItem(${idx})">✕ 移除</button>
+      `;
+    }
+    cList.appendChild(div);
+  });
+
+  const finalPackages = [];
+  const stackableItems = orderCart.filter(i => i.type === "stackable");
+  const independentItems = orderCart.filter(i => i.type === "independent");
+
+  independentItems.forEach(it => {
+    finalPackages.push({
+      name: it.title,
+      boxDesc: it.boxDesc,
+      vol: it.volume,
+      weight: it.weight,
+      items: [it.title]
+    });
+  });
+
+  if (stackableItems.length > 0) {
+    let curGroup = [];
+    stackableItems.forEach(item => {
+      const test = [...curGroup, item];
+      if (fitStackBoxes(test) !== null) {
+        curGroup.push(item);
+      } else {
+        if (curGroup.length > 0) {
+          const matched = fitStackBoxes(curGroup) || { box: MAX_STD_BOX, orient: "大包裹" };
+          const maxL_m = Math.max(...curGroup.map(x => x.l));
+          const boxL_cm = Math.round(maxL_m * 100) + 5;
+          const boxL_m = boxL_cm / 100.0;
+          const prodW = curGroup.reduce((s, x) => s + x.weight, 0);
+          const boxWgt = boxL_m * matched.box.pw;
+          finalPackages.push({
+            name: `合并包裹：${matched.box.name} 箱 (${matched.orient})`,
+            boxDesc: `${boxL_cm} × ${Math.round(matched.box.w*100)} × ${Math.round(matched.box.h*100)} cm`,
+            vol: boxL_m * matched.box.w * matched.box.h,
+            weight: prodW + boxWgt,
+            items: curGroup.map(x => x.title)
+          });
+        }
+        curGroup = [item];
+      }
+    });
+
+    if (curGroup.length > 0) {
+      const matched = fitStackBoxes(curGroup) || { box: MAX_STD_BOX, orient: "大包裹" };
+      const maxL_m = Math.max(...curGroup.map(x => x.l));
+      const boxL_cm = Math.round(maxL_m * 100) + 5;
+      const boxL_m = boxL_cm / 100.0;
+      const prodW = curGroup.reduce((s, x) => s + x.weight, 0);
+      const boxWgt = boxL_m * matched.box.pw;
+      finalPackages.push({
+        name: `合并包裹：${matched.box.name} 箱 (${matched.orient})`,
+        boxDesc: `${boxL_cm} × ${Math.round(matched.box.w*100)} × ${Math.round(matched.box.h*100)} cm`,
+        vol: boxL_m * matched.box.w * matched.box.h,
+        weight: prodW + boxWgt,
+        items: curGroup.map(x => x.title)
+      });
+    }
+  }
+
+  const pkgContainer = document.getElementById("stackPackageList");
+  pkgContainer.innerHTML = "";
+  let totalV = 0, totalW = 0;
+
+  finalPackages.forEach((pkg, idx) => {
+    totalV += pkg.vol;
+    totalW += pkg.weight;
+
+    const div = document.createElement("div");
+    div.className = "pkg-card";
+    div.innerHTML = `
+      <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+        <strong>📦 包裹 ${idx + 1}：${pkg.name}</strong>
+        <span style="color:#059669; font-weight:700;">${pkg.weight.toFixed(2)} kg</span>
+      </div>
+      <div>箱规尺寸：${pkg.boxDesc} | 计费体积: ${pkg.vol.toFixed(3)} m³</div>
+      <div style="color:#64748b; margin-top:2px;">包含明细：${pkg.items.join("、")}</div>
+    `;
+    pkgContainer.appendChild(div);
+  });
+
+  document.getElementById("st_pkgs").textContent = `${finalPackages.length} 个`;
+  document.getElementById("st_vol").textContent = `${totalV.toFixed(3)} m³`;
+  document.getElementById("st_weight").textContent = `${totalW.toFixed(2)} kg`;
+
+  window.lastStackReport = { pkgs: finalPackages, totalV, totalW };
+}
+
+function deleteCartItem(index) {
+  orderCart.splice(index, 1);
+  renderStackCalculator();
+  showToast("已移除该产品");
+}
+
+function clearCart() {
+  if (orderCart.length === 0) return;
+  orderCart = [];
+  renderStackCalculator();
+  showToast("已清空发货池");
+}
+
+function copyStackResult() {
+  if (!window.lastStackReport || window.lastStackReport.pkgs.length === 0) {
+    alert("请先添加产品！");
+    return;
+  }
+  let t = `【整单发货物流打包明细】\n总包裹数：共 ${window.lastStackReport.pkgs.length} 个包裹\n整单总毛重：${window.lastStackReport.totalW.toFixed(2)} kg\n整单总体积：${window.lastStackReport.totalV.toFixed(3)} m³\n--------------------\n`;
+  window.lastStackReport.pkgs.forEach((p, i) => {
+    t += `【包裹 ${i+1}】${p.name}\n  • 箱规尺寸：${p.boxDesc}\n  • 包裹毛重：${p.weight.toFixed(2)} kg (体积: ${p.vol.toFixed(3)} m³)\n  • 内含明细：${p.items.join(", ")}\n`;
+  });
+  navigator.clipboard.writeText(t).then(() => showToast("整单发货明细已复制！"));
+}
+
+window.onload = function() {
+  loadFabricCsv();
+  r_init();
+  f_init();
+  d_init();
+  z_calc();
+};
+</script>
+</body>
+</html>
