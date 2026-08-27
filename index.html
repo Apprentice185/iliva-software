@@ -133,6 +133,22 @@
     .card-header-bar.h-zip { background: linear-gradient(135deg, #0c4a6e 0%, #0f172a 100%); }
     .card-header-bar.h-stack { background: linear-gradient(135deg, #064e3b 0%, #0f172a 100%); }
 
+    .batch-btn-badge {
+      background: rgba(255, 255, 255, 0.18);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: #ffffff;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.2s;
+    }
+    .batch-btn-badge:hover { background: rgba(255, 255, 255, 0.3); }
+
     .card-body { padding: 16px 14px 18px; }
 
     .section-label {
@@ -160,7 +176,7 @@
     .form-group label { display: block; font-size: 0.78rem; font-weight: 600; color: #334155; margin-bottom: 5px; }
 
     .input-wrapper { position: relative; display: flex; align-items: center; }
-    select, input[type="number"], input[type="text"] {
+    select, input[type="number"], input[type="text"], textarea {
       width: 100%;
       height: 38px;
       padding: 6px 10px;
@@ -181,7 +197,7 @@
       padding-right: 28px;
       cursor: pointer;
     }
-    select:focus, input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12); }
+    select:focus, input:focus, textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12); }
     .unit-addon { position: absolute; right: 10px; font-size: 0.75rem; color: var(--text-muted); pointer-events: none; }
 
     .spec-preview-card {
@@ -254,6 +270,39 @@
       font-size: 0.75rem;
     }
 
+    /* 模态框 Modal (批量粘贴) */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 10000;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal-box {
+      background: #ffffff;
+      color: var(--text-main);
+      width: 100%;
+      max-width: 520px;
+      border-radius: var(--radius-lg);
+      padding: 18px 20px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .modal-title { font-size: 1.05rem; font-weight: 700; color: #0f172a; }
+    .btn-close-modal { background: none; border: none; font-size: 1.2rem; cursor: pointer; color: #64748b; }
+
     .toast {
       position: fixed;
       bottom: 24px;
@@ -269,7 +318,7 @@
       align-items: center;
       gap: 6px;
       transition: transform 0.25s ease;
-      z-index: 9999;
+      z-index: 10001;
       pointer-events: none;
       box-shadow: 0 8px 20px rgba(0,0,0,0.3);
     }
@@ -299,7 +348,7 @@
     <div class="calc-card">
       <div class="card-header-bar h-roller">
         <div><strong>卷轴系列</strong> (卷帘 / 斑马 / 香格里拉)</div>
-        <span style="font-size:0.7rem; opacity:0.8;">单件独立 / 组合打包</span>
+        <button class="batch-btn-badge" onclick="openBatchModal('roller')">📑 批量粘贴 Excel</button>
       </div>
       <div class="card-body">
         <div class="section-label">1. 机构选型</div>
@@ -376,7 +425,7 @@
     <div class="calc-card">
       <div class="card-header-bar h-fold">
         <div><strong>蜂巢 / 罗马帘系列</strong></div>
-        <span style="font-size:0.7rem; opacity:0.8;">单件独立 / 组合打包</span>
+        <button class="batch-btn-badge" onclick="openBatchModal('fold')">📑 批量粘贴 Excel</button>
       </div>
       <div class="card-body">
         <div class="section-label">1. 机构选型</div>
@@ -453,7 +502,7 @@
     <div class="calc-card">
       <div class="card-header-bar h-drape">
         <div><strong>开合帘 / 梦幻帘</strong> (自动双包拆分)</div>
-        <span style="font-size:0.7rem; opacity:0.8;">独立包装</span>
+        <button class="batch-btn-badge" onclick="openBatchModal('drape')">📑 批量粘贴 Excel</button>
       </div>
       <div class="card-body">
         <div class="section-label">1. 品类与机构选型</div>
@@ -521,7 +570,7 @@
     <div class="calc-card">
       <div class="card-header-bar h-zip">
         <div><strong>防风卷帘</strong> (户外单套单件专用)</div>
-        <span style="font-size:0.7rem; opacity:0.8;">单件单打</span>
+        <button class="batch-btn-badge" onclick="openBatchModal('zip')">📑 批量粘贴 Excel</button>
       </div>
       <div class="card-body">
         <div class="section-label">1. 定制尺寸输入 (cm)</div>
@@ -592,6 +641,28 @@
           📋 一键复制整单发货分包明细
         </button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- 批量 Excel 粘贴弹窗 Modal -->
+<div class="modal-overlay" id="batchModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title">📋 批量粘贴 Excel 数据</div>
+      <button class="btn-close-modal" onclick="closeBatchModal()">✕</button>
+    </div>
+    <div style="font-size:0.75rem; color:#64748b; margin-bottom:8px; line-height:1.4;">
+      💡 直接从 Excel 复制<strong>宽度和高度两列</strong>（自动识别厘米或米，自动过滤表头），每行代表一套产品。将按照当前选定的机构型号与面料进行批量测算。
+    </div>
+    <div class="form-group">
+      <textarea id="batchInputText" style="height:150px; font-family:monospace; font-size:0.8rem; resize:vertical;" placeholder="示例：直接在 Excel 复制粘贴过来&#10;0.844	1.772&#10;2.388	1.769&#10;2.691	1.771"></textarea>
+    </div>
+    <div id="batchPreviewBox" style="font-size:0.75rem; color:#0f172a; margin-bottom:10px; background:#f8fafc; padding:8px 10px; border-radius:6px; border:1px solid #e2e8f0; display:none;">
+    </div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+      <button class="btn-action btn-copy-sub" onclick="closeBatchModal()">取消</button>
+      <button class="btn-action" style="background:#2563eb; color:#ffffff;" onclick="processBatchData()">⚡ 批量解析并加入清单</button>
     </div>
   </div>
 </div>
@@ -1269,7 +1340,222 @@ function z_addToCart() {
 
 /**
  * -------------------------------------------------------------
- * 8. 堆叠与分箱算法 (整单总控)
+ * 8. 批量 Excel 数据解析与录入模块
+ * -------------------------------------------------------------
+ */
+let currentBatchTarget = 'roller';
+
+function openBatchModal(targetCategory) {
+  currentBatchTarget = targetCategory;
+  document.getElementById("batchInputText").value = "";
+  document.getElementById("batchPreviewBox").style.display = "none";
+  document.getElementById("batchModal").classList.add("show");
+}
+
+function closeBatchModal() {
+  document.getElementById("batchModal").classList.remove("show");
+}
+
+function parseExcelText(text) {
+  const lines = text.split(/\r?\n/);
+  const result = [];
+  for (let line of lines) {
+    line = line.trim();
+    if (!line) continue;
+    // 依据制表符 \t、逗号或空格分割列
+    const parts = line.split(/[\t, \s]+/).filter(x => x !== "");
+    if (parts.length >= 2) {
+      let w = parseFloat(parts[0]);
+      let h = parseFloat(parts[1]);
+      if (isNaN(w) || isNaN(h)) continue; // 自动过滤表头如 Width, Height
+
+      // 智能单位判断：如果数值小于 10，判定为米，转换为厘米
+      if (w < 10) w = Math.round(w * 1000) / 10;
+      if (h < 10) h = Math.round(h * 1000) / 10;
+
+      result.push({ w, h });
+    }
+  }
+  return result;
+}
+
+function processBatchData() {
+  const text = document.getElementById("batchInputText").value;
+  const items = parseExcelText(text);
+
+  if (items.length === 0) {
+    alert("未能解析出有效的尺寸数据！请确保直接从 Excel 框选复制宽度和高度两列。");
+    return;
+  }
+
+  let addedCount = 0;
+
+  if (currentBatchTarget === 'roller') {
+    const cat = document.getElementById("r_cat").value;
+    const mid = document.getElementById("r_model").value;
+    const gsm = parseFloat(document.getElementById("r_gsm").value) || 0;
+    const m = R_CONFIG[cat].models.find(x => x.id === mid);
+    const fabSel = document.getElementById("r_fabricSelect");
+    const currentFab = (fabSel && fabSel.value !== "CUSTOM") ? fabSel.value : "自定义面料";
+
+    items.forEach((item, i) => {
+      const w_m = item.w / 100.0;
+      const h_m = item.h / 100.0;
+      const netW = (m.pw * w_m) + m.aw + ((gsm / 1000) * w_m * h_m * R_CONFIG[cat].layer);
+      orderCart.push({
+        type: "stackable",
+        title: `${cat}(${mid})-${currentFab}`,
+        w_cm: item.w,
+        h_cm: item.h,
+        l: w_m,
+        d: m.d,
+        h: m.h,
+        weight: netW,
+        id: Date.now() + Math.random() + i
+      });
+      addedCount++;
+    });
+
+  } else if (currentBatchTarget === 'fold') {
+    const cat = document.getElementById("f_cat").value;
+    const mid = document.getElementById("f_model").value;
+    const gsm = parseFloat(document.getElementById("f_gsm").value) || 0;
+    const cfg = F_CONFIG[cat];
+    const m = cfg.models.find(x => x.id === mid);
+    const fabSel = document.getElementById("f_fabricSelect");
+    const currentFab = (fabSel && fabSel.value !== "CUSTOM") ? fabSel.value : "自定义面料";
+
+    items.forEach((item, i) => {
+      const w_m = item.w / 100.0;
+      const h_m = item.h / 100.0;
+      const rawL_m = m.isSpecial ? Math.max(w_m, h_m) : w_m;
+      const rawH_m = m.h + (h_m * (cfg.hFactor || 0));
+      let rodW = 0;
+      if (cfg.isRoman) rodW = w_m * 0.08 * Math.round(h_m / 0.15);
+      const netW = (m.pw * w_m) + m.aw + ((gsm / 1000) * w_m * h_m) + rodW;
+
+      orderCart.push({
+        type: "stackable",
+        title: `${cat}(${mid})-${currentFab}`,
+        w_cm: item.w,
+        h_cm: item.h,
+        l: rawL_m,
+        d: m.d,
+        h: rawH_m,
+        weight: netW,
+        id: Date.now() + Math.random() + i
+      });
+      addedCount++;
+    });
+
+  } else if (currentBatchTarget === 'drape') {
+    const cat = document.getElementById("d_cat").value;
+    const mid = document.getElementById("d_model").value;
+    const maxLimit_m = parseFloat(document.getElementById("d_maxLimit").value) || 3.0;
+    const gsm = parseFloat(document.getElementById("d_gsm").value) || 0;
+    const model = DRAPE_MODELS[cat].find(x => x.id === mid);
+
+    items.forEach((item, i) => {
+      const w_m = item.w / 100.0;
+      const h_m = item.h / 100.0;
+      let segments = 1;
+      if (w_m > maxLimit_m && maxLimit_m > 0) segments = Math.ceil(w_m / maxLimit_m);
+      const segL_m = w_m / segments;
+      const trackBoxL_cm = Math.round(segL_m * 100) + 5;
+      const trackBox = fitTrackBoxStd(model, segments);
+      const trackGrossW = (model.pw * w_m) + model.aw + ((trackBoxL_cm / 100.0) * trackBox.pw);
+      const trackVol = (trackBoxL_cm / 100.0) * trackBox.w * trackBox.h;
+
+      orderCart.push({
+        type: "independent",
+        title: `${cat}轨道(${mid})-宽${item.w}cm`,
+        boxDesc: `${trackBox.name} (${trackBoxL_cm}×${Math.round(trackBox.w*100)}×${Math.round(trackBox.h*100)}cm)`,
+        weight: trackGrossW,
+        volume: trackVol,
+        id: Date.now() + Math.random() + i
+      });
+
+      const prodArea = w_m * h_m;
+      let actualArea = (cat === "开合帘") ? prodArea * 2.2 : prodArea;
+      let fabricW = (gsm / 1000) * actualArea;
+
+      if (cat === "开合帘") {
+        const fCount = Math.ceil(actualArea / 20.0) || 1;
+        for (let k = 1; k <= fCount; k++) {
+          orderCart.push({
+            type: "independent",
+            title: `开合帘面料箱-宽${item.w}cm`,
+            boxDesc: "60×50×40cm 专用箱",
+            weight: (fabricW / fCount) + 1.70,
+            volume: 0.60 * 0.50 * 0.40,
+            id: Date.now() + Math.random() + k
+          });
+        }
+      } else {
+        if (actualArea <= 10.0) {
+          orderCart.push({
+            type: "independent",
+            title: `梦幻帘小箱-宽${item.w}cm`,
+            boxDesc: "44×29×29cm 梦幻小箱",
+            weight: fabricW + 0.60,
+            volume: 0.44 * 0.29 * 0.29,
+            id: Date.now() + Math.random()
+          });
+        } else {
+          const fCount = Math.ceil(actualArea / 20.0) || 1;
+          for (let k = 1; k <= fCount; k++) {
+            orderCart.push({
+              type: "independent",
+              title: `梦幻帘大箱-宽${item.w}cm`,
+              boxDesc: "44×44×36cm 梦幻大箱",
+              weight: (fabricW / fCount) + 0.90,
+              volume: 0.44 * 0.44 * 0.36,
+              id: Date.now() + Math.random() + k
+            });
+          }
+        }
+      }
+      addedCount++;
+    });
+
+  } else if (currentBatchTarget === 'zip') {
+    items.forEach((item, i) => {
+      const w_m = item.w / 100.0;
+      const h_m = item.h / 100.0;
+      let modelName = "";
+      let boxD_cm = 0, boxH_cm = 0, pw = 0;
+      if (w_m <= 4.0 && h_m <= 3.0) {
+        modelName = "100款"; boxD_cm = 22; boxH_cm = 13; pw = 15;
+      } else if (w_m <= 5.5 && h_m <= 2.5) {
+        modelName = "100款"; boxD_cm = 22; boxH_cm = 13; pw = 15;
+      } else {
+        modelName = "120款"; boxD_cm = 26; boxH_cm = 17; pw = 18;
+      }
+      const boxL_cm = Math.max(item.w, item.h) + 5;
+      const boxL_m = boxL_cm / 100.0;
+      const vol_m3 = boxL_m * (boxD_cm / 100.0) * (boxH_cm / 100.0);
+      const grossW = boxL_m * pw;
+
+      orderCart.push({
+        type: "independent",
+        title: `防风卷帘 (${modelName})-宽${item.w}cm`,
+        boxDesc: `${boxL_cm}×${boxD_cm}×${boxH_cm}cm 箱`,
+        weight: grossW,
+        volume: vol_m3,
+        id: Date.now() + Math.random() + i
+      });
+      addedCount++;
+    });
+  }
+
+  updateCartBadge();
+  closeBatchModal();
+  showToast(`🎉 成功批量录入 ${addedCount} 套产品！`);
+}
+
+/**
+ * -------------------------------------------------------------
+ * 9. 堆叠与分箱算法 (整单总控)
  * -------------------------------------------------------------
  */
 function fitTrackBoxStd(model, segs) {
@@ -1329,7 +1615,7 @@ function renderStackCalculator() {
   cList.innerHTML = "";
 
   if (orderCart.length === 0) {
-    cList.innerHTML = `<div style="font-size:0.75rem; color:#94a3b8; text-align:center; padding:12px;">发货池为空，请在各产品页面点击【加入整单清单】</div>`;
+    cList.innerHTML = `<div style="font-size:0.75rem; color:#94a3b8; text-align:center; padding:12px;">发货池为空，请在各产品页面点击【加入整单清单】或【批量粘贴】</div>`;
     document.getElementById("st_pkgs").textContent = "-";
     document.getElementById("st_vol").textContent = "-";
     document.getElementById("st_weight").textContent = "-";
